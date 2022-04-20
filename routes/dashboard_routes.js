@@ -28,22 +28,37 @@ router.get("/alluser", async (req, res) => {
 });
 
 // Get table data users with relation
-router.get("/alluserrelation", async (req, res) => {
+router.get("/alluser-pagination", async (req, res) => {
   let { maxPerpage, page, searchBy, searchString } = req.query;
   // query is string convert into INT
   maxPerpage = parseInt(maxPerpage);
   page = parseInt(page);
 
   try {
-    const alluser = await prisma.person.findMany({
-      where: { [searchBy]: { contains: searchString } },
-      take: maxPerpage,
-      skip: (page - 1) * maxPerpage,
-      include: { country: true },
-    });
-    return res.send({
-      alluser: alluser,
-    });
+    // if req.query Thruty in searchBy and Search String
+    if (searchBy && searchString) {
+      const alluser = await prisma.person.findMany({
+        where: { [searchBy]: { contains: searchString } },
+        take: maxPerpage,
+        skip: (page - 1) * maxPerpage,
+        include: { country: true },
+      });
+      return res.send({
+        data: alluser,
+      });
+    }
+
+    // If req.query Falsy in searchBy or Falsy in searchSring
+    if (!searchBy || !searchString) {
+      const alluser = await prisma.person.findMany({
+        take: maxPerpage,
+        skip: (page - 1) * maxPerpage,
+        include: { country: true },
+      });
+      return res.send({
+        data: alluser,
+      });
+    }
   } catch (error) {
     return res.status(400).send({ message: error.message });
   }
@@ -64,7 +79,7 @@ router.get("/alluserwhererelate", async (req, res) => {
       include: { country: true },
     });
     return res.send({
-      alluser: alluser,
+      data: alluser,
     });
   } catch (error) {
     return res.status(400).send({ message: error.message });
