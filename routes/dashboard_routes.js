@@ -3,6 +3,7 @@ const permission = require("../middleware/permission");
 const router = express.Router();
 
 const { PrismaClient } = require("@prisma/client");
+const { query } = require("express");
 const prisma = new PrismaClient();
 
 router.get("/", async (req, res) => {
