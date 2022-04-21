@@ -29,7 +29,8 @@ router.get("/alluser", async (req, res) => {
 
 // Get table data users with relation
 router.get("/alluser-pagination", async (req, res) => {
-  let { maxPerpage, page, searchBy, searchString } = req.query;
+  let { maxPerpage, page, searchBy, searchString, sortBy, sortMethod } =
+    req.query;
   // query is string convert into INT
   maxPerpage = parseInt(maxPerpage);
   page = parseInt(page);
@@ -39,6 +40,7 @@ router.get("/alluser-pagination", async (req, res) => {
     if (searchBy && searchString) {
       const alluser = await prisma.person.findMany({
         where: { [searchBy]: { contains: searchString } },
+        orderBy: { [sortBy]: sortMethod },
         take: maxPerpage,
         skip: (page - 1) * maxPerpage,
         include: { country: true },
@@ -51,6 +53,7 @@ router.get("/alluser-pagination", async (req, res) => {
     // If req.query Falsy in searchBy or Falsy in searchSring
     if (!searchBy || !searchString) {
       const alluser = await prisma.person.findMany({
+        orderBy: { [sortBy]: sortMethod },
         take: maxPerpage,
         skip: (page - 1) * maxPerpage,
         include: { country: true },
