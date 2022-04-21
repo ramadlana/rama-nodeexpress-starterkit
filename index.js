@@ -10,9 +10,9 @@ const cookieParser = require("cookie-parser");
 app.use(cookieParser());
 
 // simulate delay
-// app.use((req, res, next) => {
-//   setTimeout(() => next(), 1000);
-// });
+app.use((req, res, next) => {
+  setTimeout(() => next(), 1000);
+});
 
 // Import required library
 const logging_func = require("./startup/log");
