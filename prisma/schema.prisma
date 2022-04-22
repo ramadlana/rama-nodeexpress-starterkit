@@ -19,14 +19,14 @@ model app_dummy_person {
   id        Int     @id @default(autoincrement())
   name      String  @unique
   address   String
-  country   app_dummy_country @relation(fields: [countryId], references: [id])
+  app_dummy_country   app_dummy_country @relation(fields: [countryId], references: [id])
   countryId Int
 }
 
 model app_dummy_country {
   id      Int      @id @default(autoincrement())
   country String
-  Person  app_dummy_person[]
+  app_dummy_person  app_dummy_person[]
 }
 
 enum RoleEnum {

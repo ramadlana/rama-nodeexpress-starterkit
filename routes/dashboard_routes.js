@@ -43,7 +43,7 @@ router.get("/alluser-pagination", async (req, res) => {
         orderBy: { [sortBy]: sortMethod },
         take: maxPerpage,
         skip: (page - 1) * maxPerpage,
-        include: { country: true },
+        include: { app_dummy_country: true },
       });
       return res.send({
         data: alluser,
@@ -56,7 +56,7 @@ router.get("/alluser-pagination", async (req, res) => {
         orderBy: { [sortBy]: sortMethod },
         take: maxPerpage,
         skip: (page - 1) * maxPerpage,
-        include: { country: true },
+        include: { app_dummy_country: true },
       });
       return res.send({
         data: alluser,
@@ -79,7 +79,7 @@ router.get("/alluserwhererelate", async (req, res) => {
       where: { country: { country: { contains: "Indo" } } },
       take: maxPerpage,
       skip: (page - 1) * maxPerpage,
-      include: { country: true },
+      include: { app_dummy_country: true },
     });
     return res.send({
       data: alluser,
@@ -104,7 +104,7 @@ router.get("/alluser-cursor", async (req, res) => {
         id: cursorInt,
       },
       take: maxPerpageInt,
-      include: { country: true },
+      include: { app_dummy_country: true },
     });
     return res.send({
       data: alluser,
