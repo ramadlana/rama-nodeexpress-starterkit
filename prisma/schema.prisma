@@ -138,6 +138,20 @@ model rates {
   rate     Float?
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model Country {
+  id      Int     @id @default(autoincrement())
+  country String?
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model Person {
+  id        Int     @id @default(autoincrement())
+  name      String?
+  address   String?
+  countryId Int?
+}
+
 enum RoleEnum {
   superadmin
   admin
