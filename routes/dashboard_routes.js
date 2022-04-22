@@ -19,7 +19,7 @@ router.get("/admin", permission(), async (req, res) => {
   });
 });
 
-// Get table data user with relation with app_dummy_country  table
+// Get table data user with relation with country  table
 router.get("/alluser", async (req, res) => {
   const alluser = await prisma.app_dummy_person.findMany();
   return res.send({
@@ -43,7 +43,7 @@ router.get("/alluser-pagination", async (req, res) => {
         orderBy: { [sortBy]: sortMethod },
         take: maxPerpage,
         skip: (page - 1) * maxPerpage,
-        include: { app_dummy_country: true },
+        include: { country: true },
       });
       return res.send({
         data: alluser,
@@ -56,7 +56,7 @@ router.get("/alluser-pagination", async (req, res) => {
         orderBy: { [sortBy]: sortMethod },
         take: maxPerpage,
         skip: (page - 1) * maxPerpage,
-        include: { app_dummy_country: true },
+        include: { country: true },
       });
       return res.send({
         data: alluser,
@@ -76,10 +76,10 @@ router.get("/alluserwhererelate", async (req, res) => {
 
   try {
     const alluser = await prisma.app_dummy_person.findMany({
-      where: { app_dummy_country: { country: { contains: "Indo" } } },
+      where: { country: { country: { contains: "Indo" } } },
       take: maxPerpage,
       skip: (page - 1) * maxPerpage,
-      include: { app_dummy_country: true },
+      include: { country: true },
     });
     return res.send({
       data: alluser,
@@ -104,7 +104,7 @@ router.get("/alluser-cursor", async (req, res) => {
         id: cursorInt,
       },
       take: maxPerpageInt,
-      include: { app_dummy_country: true },
+      include: { country: true },
     });
     return res.send({
       data: alluser,
