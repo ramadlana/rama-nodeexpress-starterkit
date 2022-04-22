@@ -15,18 +15,127 @@ model users {
   roles    RoleEnum @default(user)
 }
 
-model Person {
-  id        Int     @id @default(autoincrement())
-  name      String  @unique
-  address   String
-  country   Country @relation(fields: [countryId], references: [id])
-  countryId Int
+model hotspots {
+  id      BigInt  @id @default(autoincrement())
+  name    String? @db.VarChar(32)
+  mac     String? @db.VarChar(32)
+  geocode String? @db.VarChar(128)
 }
 
-model Country {
-  id      Int      @id @default(autoincrement())
-  country String
-  Person  Person[]
+model nas {
+  id          Int     @id @default(autoincrement())
+  nasname     String
+  shortname   String
+  type        String  @default("other")
+  ports       Int?
+  secret      String
+  server      String?
+  community   String?
+  description String?
+
+  @@index([nasname], map: "nas_nasname")
+}
+
+model operators {
+  id       BigInt  @id @default(autoincrement())
+  username String? @db.VarChar(32)
+  password String? @db.VarChar(32)
+}
+
+model radacct {
+  radacctid          BigInt    @id @default(autoincrement())
+  acctsessionid      String
+  acctuniqueid       String    @unique
+  username           String?
+  realm              String?
+  nasipaddress       String    @db.Inet
+  nasportid          String?
+  nasporttype        String?
+  acctstarttime      DateTime? @db.Timestamptz(6)
+  acctupdatetime     DateTime? @db.Timestamptz(6)
+  acctstoptime       DateTime? @db.Timestamptz(6)
+  acctinterval       BigInt?
+  acctsessiontime    BigInt?
+  acctauthentic      String?
+  connectinfo_start  String?
+  connectinfo_stop   String?
+  acctinputoctets    BigInt?
+  acctoutputoctets   BigInt?
+  calledstationid    String?
+  callingstationid   String?
+  acctterminatecause String?
+  servicetype        String?
+  framedprotocol     String?
+  framedipaddress    String?   @db.Inet
+
+  @@index([acctstarttime, username], map: "radacct_start_user_idx")
+}
+
+model radcheck {
+  id         Int       @id @default(autoincrement())
+  username   String    @unique(map: "unique") @default("")
+  attribute  String    @default("")
+  op         String    @default("==") @db.VarChar(2)
+  value      String    @default("")
+  expirydate DateTime? @db.Date
+
+  @@index([username, attribute], map: "radcheck_username")
+}
+
+model radgroupcheck {
+  id        Int    @id @default(autoincrement())
+  groupname String @default("")
+  attribute String @default("")
+  op        String @default("==") @db.VarChar(2)
+  value     String @default("")
+
+  @@index([groupname, attribute], map: "radgroupcheck_groupname")
+}
+
+model radgroupreply {
+  id        Int    @id @default(autoincrement())
+  groupname String @default("")
+  attribute String @default("")
+  op        String @default("=") @db.VarChar(2)
+  value     String @default("")
+
+  @@index([groupname, attribute], map: "radgroupreply_groupname")
+}
+
+model radpostauth {
+  id               BigInt   @id @default(autoincrement())
+  username         String
+  pass             String?
+  reply            String?
+  calledstationid  String?
+  callingstationid String?
+  authdate         DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model radreply {
+  id        Int    @id @default(autoincrement())
+  username  String @default("")
+  attribute String @default("")
+  op        String @default("=") @db.VarChar(2)
+  value     String @default("")
+
+  @@index([username, attribute], map: "radreply_username")
+}
+
+model radusergroup {
+  id        Int    @id @default(autoincrement())
+  username  String @default("")
+  groupname String @default("")
+  priority  Int    @default(0)
+
+  @@index([username], map: "radusergroup_username")
+}
+
+model rates {
+  id       BigInt  @id @default(autoincrement())
+  type     String? @db.VarChar(32)
+  cardbank Float?
+  rate     Float?
 }
 
 enum RoleEnum {
