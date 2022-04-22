@@ -100,7 +100,7 @@ router.post("/in", async (req, res) => {
       //  Secret
       process.env.JWT_SECRET_KEY,
       // Jwt Params
-      { expiresIn: "30d" }
+      { expiresIn: "1d" }
     );
 
     res.setHeader(
@@ -126,7 +126,11 @@ router.post("/in", async (req, res) => {
 
     // Return token in Body
     return res.send({
-      message: "login success. cookies sent as header set cookies",
+      message: "login success",
+      userInfo: {
+        id: user.id,
+        username: user.username,
+      },
     });
   } catch (error) {
     return res.status(500).send({ error: error.message });
