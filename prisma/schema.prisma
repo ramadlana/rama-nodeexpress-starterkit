@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model users {
+model app_users {
   id       Int      @id @default(autoincrement())
   username String   @unique(map: "usernameUnique") @db.VarChar(255)
   password String   @db.VarChar(255)
@@ -15,18 +15,18 @@ model users {
   roles    RoleEnum @default(user)
 }
 
-model Person {
+model app_dummy_person {
   id        Int     @id @default(autoincrement())
   name      String  @unique
   address   String
-  country   Country @relation(fields: [countryId], references: [id])
+  country   app_dummy_country @relation(fields: [countryId], references: [id])
   countryId Int
 }
 
-model Country {
+model app_dummy_country {
   id      Int      @id @default(autoincrement())
   country String
-  Person  Person[]
+  Person  app_dummy_person[]
 }
 
 enum RoleEnum {
