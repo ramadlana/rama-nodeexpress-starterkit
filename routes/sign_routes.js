@@ -83,6 +83,9 @@ router.post("/in", async (req, res) => {
     if (!user)
       return res.status(401).send({ message: "Aih .. user not found" });
 
+    if (user && !user.isActive)
+      return res.status(401).send({ message: "user is not active yet" });
+
     // Check password
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword)

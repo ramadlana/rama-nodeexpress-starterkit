@@ -13,6 +13,7 @@ model app_users {
   password String   @db.VarChar(255)
   email    String   @unique(map: "emailUnique") @db.VarChar(255)
   roles    RoleEnum @default(user)
+  isActive  Boolean @default(false)
 }
 
 model app_dummy_person {
