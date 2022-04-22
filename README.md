@@ -6,3 +6,4 @@ Step:
    if DB existing
 
 - add new table based on schema and data
+  default password test/12345678
