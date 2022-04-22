@@ -8,26 +8,151 @@ datasource db {
 }
 
 model app_users {
-  id       Int      @id @default(autoincrement())
+  id       Int      @id(map: "users_pkey") @default(autoincrement())
   username String   @unique(map: "usernameUnique") @db.VarChar(255)
   password String   @db.VarChar(255)
   email    String   @unique(map: "emailUnique") @db.VarChar(255)
   roles    RoleEnum @default(user)
-  isActive  Boolean @default(false)
+  isActive Boolean? @default(false)
 }
 
 model app_dummy_person {
-  id        Int     @id @default(autoincrement())
-  name      String  @unique
-  address   String
-  app_dummy_country   app_dummy_country @relation(fields: [countryId], references: [id])
-  countryId Int
+  id                Int                @id(map: "Person_pkey") @default(autoincrement())
+  name              String?
+  address           String?
+  countryId         Int?
+  app_dummy_country app_dummy_country? @relation(fields: [countryId], references: [id], onDelete: Cascade, map: "country")
 }
 
 model app_dummy_country {
-  id      Int      @id @default(autoincrement())
-  country String
-  app_dummy_person  app_dummy_person[]
+  id               Int                @id(map: "Country_pkey") @default(autoincrement())
+  country          String?
+  app_dummy_person app_dummy_person[]
+}
+
+model hotspots {
+  id      BigInt  @id @default(autoincrement())
+  name    String? @db.VarChar(32)
+  mac     String? @db.VarChar(32)
+  geocode String? @db.VarChar(128)
+}
+
+model nas {
+  id          Int     @id @default(autoincrement())
+  nasname     String
+  shortname   String
+  type        String  @default("other")
+  ports       Int?
+  secret      String
+  server      String?
+  community   String?
+  description String?
+
+  @@index([nasname], map: "nas_nasname")
+}
+
+model operators {
+  id       BigInt  @id @default(autoincrement())
+  username String? @db.VarChar(32)
+  password String? @db.VarChar(32)
+}
+
+model radacct {
+  radacctid          BigInt    @id @default(autoincrement())
+  acctsessionid      String
+  acctuniqueid       String    @unique
+  username           String?
+  realm              String?
+  nasipaddress       String    @db.Inet
+  nasportid          String?
+  nasporttype        String?
+  acctstarttime      DateTime? @db.Timestamptz(6)
+  acctupdatetime     DateTime? @db.Timestamptz(6)
+  acctstoptime       DateTime? @db.Timestamptz(6)
+  acctinterval       BigInt?
+  acctsessiontime    BigInt?
+  acctauthentic      String?
+  connectinfo_start  String?
+  connectinfo_stop   String?
+  acctinputoctets    BigInt?
+  acctoutputoctets   BigInt?
+  calledstationid    String?
+  callingstationid   String?
+  acctterminatecause String?
+  servicetype        String?
+  framedprotocol     String?
+  framedipaddress    String?   @db.Inet
+
+  @@index([acctstarttime, username], map: "radacct_start_user_idx")
+}
+
+model radcheck {
+  id         Int       @id @default(autoincrement())
+  username   String    @unique(map: "unique") @default("")
+  attribute  String    @default("Cleartext-Password")
+  op         String    @default(":=") @db.VarChar(2)
+  value      String    @default("")
+  expirydate DateTime? @db.Date
+  email      String?   @db.VarChar(255)
+  address    String?   @db.VarChar(255)
+
+  @@index([username, attribute], map: "radcheck_username")
+}
+
+model radgroupcheck {
+  id        Int    @id @default(autoincrement())
+  groupname String @default("")
+  attribute String @default("")
+  op        String @default("==") @db.VarChar(2)
+  value     String @default("")
+
+  @@index([groupname, attribute], map: "radgroupcheck_groupname")
+}
+
+model radgroupreply {
+  id        Int    @id @default(autoincrement())
+  groupname String @default("")
+  attribute String @default("")
+  op        String @default("=") @db.VarChar(2)
+  value     String @default("")
+
+  @@index([groupname, attribute], map: "radgroupreply_groupname")
+}
+
+model radpostauth {
+  id               BigInt   @id @default(autoincrement())
+  username         String
+  pass             String?
+  reply            String?
+  calledstationid  String?
+  callingstationid String?
+  authdate         DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model radreply {
+  id        Int    @id @default(autoincrement())
+  username  String @default("")
+  attribute String @default("")
+  op        String @default("=") @db.VarChar(2)
+  value     String @default("")
+
+  @@index([username, attribute], map: "radreply_username")
+}
+
+model radusergroup {
+  id        Int    @id @default(autoincrement())
+  username  String @default("")
+  groupname String @default("")
+  priority  Int    @default(0)
+
+  @@index([username], map: "radusergroup_username")
+}
+
+model rates {
+  id       BigInt  @id @default(autoincrement())
+  type     String? @db.VarChar(32)
+  cardbank Float?
+  rate     Float?
 }
 
 enum RoleEnum {
