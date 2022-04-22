@@ -38,7 +38,7 @@ router.post("/up", async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, salt);
 
   try {
-    const save = await prisma.users.create({
+    const save = await prisma.app_users.create({
       data: {
         email: email,
         username: username,
@@ -75,7 +75,7 @@ router.post("/in", async (req, res) => {
 
   try {
     // Get User
-    const user = await prisma.users.findUnique({
+    const user = await prisma.app_users.findUnique({
       where: {
         username: username,
       },

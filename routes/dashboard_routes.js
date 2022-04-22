@@ -21,7 +21,7 @@ router.get("/admin", permission(), async (req, res) => {
 
 // Get table data user with relation with country table
 router.get("/alluser", async (req, res) => {
-  const alluser = await prisma.person.findMany();
+  const alluser = await prisma.app_dummy_person.findMany();
   return res.send({
     alluser: alluser,
   });
@@ -38,12 +38,12 @@ router.get("/alluser-pagination", async (req, res) => {
   try {
     // if req.query Thruty in searchBy and Search String
     if (searchBy && searchString) {
-      const alluser = await prisma.person.findMany({
+      const alluser = await prisma.app_dummy_person.findMany({
         where: { [searchBy]: { contains: searchString } },
         orderBy: { [sortBy]: sortMethod },
         take: maxPerpage,
         skip: (page - 1) * maxPerpage,
-        include: { country: true },
+        include: { app_dummy_country: true },
       });
       return res.send({
         data: alluser,
@@ -52,11 +52,11 @@ router.get("/alluser-pagination", async (req, res) => {
 
     // If req.query Falsy in searchBy or Falsy in searchSring
     if (!searchBy || !searchString) {
-      const alluser = await prisma.person.findMany({
+      const alluser = await prisma.app_dummy_person.findMany({
         orderBy: { [sortBy]: sortMethod },
         take: maxPerpage,
         skip: (page - 1) * maxPerpage,
-        include: { country: true },
+        include: { app_dummy_country: true },
       });
       return res.send({
         data: alluser,
@@ -75,11 +75,11 @@ router.get("/alluserwhererelate", async (req, res) => {
   page = parseInt(page);
 
   try {
-    const alluser = await prisma.person.findMany({
-      where: { country: { country: { contains: "Indo" } } },
+    const alluser = await prisma.app_dummy_person.findMany({
+      where: { app_dummy_country: { country: { contains: "Indo" } } },
       take: maxPerpage,
       skip: (page - 1) * maxPerpage,
-      include: { country: true },
+      include: { app_dummy_country: true },
     });
     return res.send({
       data: alluser,
@@ -99,12 +99,12 @@ router.get("/alluser-cursor", async (req, res) => {
   const maxPerpageInt = parseInt(maxPerpage);
 
   try {
-    const alluser = await prisma.person.findMany({
+    const alluser = await prisma.app_dummy_person.findMany({
       cursor: {
         id: cursorInt,
       },
       take: maxPerpageInt,
-      include: { country: true },
+      include: { app_dummy_country: true },
     });
     return res.send({
       data: alluser,

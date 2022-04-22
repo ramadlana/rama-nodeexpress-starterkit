@@ -7,14 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model users {
-  id       Int      @id @default(autoincrement())
-  username String   @unique(map: "usernameUnique") @db.VarChar(255)
-  password String   @db.VarChar(255)
-  email    String   @unique(map: "emailUnique") @db.VarChar(255)
-  roles    RoleEnum @default(user)
-}
-
 model hotspots {
   id      BigInt  @id @default(autoincrement())
   name    String? @db.VarChar(32)
@@ -74,10 +66,12 @@ model radacct {
 model radcheck {
   id         Int       @id @default(autoincrement())
   username   String    @unique(map: "unique") @default("")
-  attribute  String    @default("")
-  op         String    @default("==") @db.VarChar(2)
+  attribute  String    @default("Cleartext-Password")
+  op         String    @default(":=") @db.VarChar(2)
   value      String    @default("")
   expirydate DateTime? @db.Date
+  email      String?   @db.VarChar(255)
+  address    String?   @db.VarChar(255)
 
   @@index([username, attribute], map: "radcheck_username")
 }
@@ -138,18 +132,26 @@ model rates {
   rate     Float?
 }
 
-model country {
-  id      Int      @id(map: "Country_pkey") @default(autoincrement())
-  country String?
-  person  person[]
+model app_dummy_country {
+  id               Int                @id(map: "Country_pkey") @default(autoincrement())
+  country          String?
+  app_dummy_person app_dummy_person[]
 }
 
-model person {
-  id        Int      @id(map: "Person_pkey") @default(autoincrement())
-  name      String?
-  address   String?
-  countryId Int?
-  country   country? @relation(fields: [countryId], references: [id], onDelete: Cascade, map: "country")
+model app_dummy_person {
+  id                Int                @id(map: "Person_pkey") @default(autoincrement())
+  name              String?
+  address           String?
+  countryId         Int?
+  app_dummy_country app_dummy_country? @relation(fields: [countryId], references: [id], onDelete: Cascade, map: "country")
+}
+
+model app_users {
+  id       Int      @id(map: "users_pkey") @default(autoincrement())
+  username String   @unique(map: "usernameUnique") @db.VarChar(255)
+  password String   @db.VarChar(255)
+  email    String   @unique(map: "emailUnique") @db.VarChar(255)
+  roles    RoleEnum @default(user)
 }
 
 enum RoleEnum {
