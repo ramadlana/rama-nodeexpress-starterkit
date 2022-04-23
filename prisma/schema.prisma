@@ -87,14 +87,18 @@ model radacct {
 }
 
 model radcheck {
-  id         Int       @id @default(autoincrement())
-  username   String    @unique(map: "unique") @default("")
-  attribute  String    @default("Cleartext-Password")
-  op         String    @default(":=") @db.VarChar(2)
-  value      String    @default("")
-  expirydate DateTime? @db.Date
-  email      String?   @db.VarChar(255)
-  address    String?   @db.VarChar(255)
+  id              Int               @id @default(autoincrement())
+  username        String            @unique(map: "unique") @default("")
+  attribute       String            @default("Cleartext-Password")
+  op              String            @default(":=") @db.VarChar(2)
+  value           String            @default("")
+  expirydate      DateTime?         @db.Date
+  email           String?           @db.VarChar(255)
+  address         String?           @db.VarChar(255)
+  first_name      String?           @db.VarChar(255)
+  last_name       String?           @db.VarChar(255)
+  phone           String?           @db.VarChar(255)
+  app_transaction app_transaction[]
 
   @@index([username, attribute], map: "radcheck_username")
 }
@@ -172,7 +176,8 @@ model app_transaction {
   gross_amount       String?   @db.VarChar(255)
   fraud_status       String?   @db.VarChar(255)
   currency           String?   @db.VarChar(255)
-  radius_user        String?   @db.VarChar(255)
+  radcheck_id        Int?
+  radcheck           radcheck? @relation(fields: [radcheck_id], references: [id], onDelete: Cascade, map: "radcheck_id")
 }
 
 enum RoleEnum {

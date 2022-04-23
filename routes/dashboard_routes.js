@@ -135,6 +135,9 @@ router.get("/all-radius-user", async (req, res) => {
           expirydate: true,
           email: true,
           address: true,
+          first_name: true,
+          last_name: true,
+          phone: true,
         },
       });
       return res.send({
@@ -154,6 +157,9 @@ router.get("/all-radius-user", async (req, res) => {
           expirydate: true,
           email: true,
           address: true,
+          first_name: true,
+          last_name: true,
+          phone: true,
         },
       });
       return res.send({

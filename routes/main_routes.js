@@ -40,43 +40,46 @@ router.get("/prisma", async (req, res) => {
 });
 
 // Mid Trans Checkout
-router.post("/checkout", async (req, res) => {
-  const { order_id } = req.body;
-  const midtransClient = require("midtrans-client");
-  // Create Snap API instance
-  let snap = new midtransClient.Snap({
-    // Set to true if you want Production Environment (accept real transaction).
-    isProduction: false,
-    serverKey: "SB-Mid-server-fy6I1u7MkJ2HC8EU8WFwPMBr",
-  });
+router.get("/checkout", async (req, res) => {
+  const { order_id } = req.query;
+  console.log(req.query);
+  return res.send("ok");
+  // const midtransClient = require("midtrans-client");
 
-  let parameter = {
-    transaction_details: {
-      order_id: order_id,
-      gross_amount: 10000,
-    },
-    credit_card: {
-      secure: true,
-    },
-    customer_details: {
-      first_name: "budi",
-      last_name: "pratama",
-      email: "budi.pra@example.com",
-      phone: "08111222333",
-    },
-  };
+  // // Create Snap API instance
+  // let snap = new midtransClient.Snap({
+  //   // Set to true if you want Production Environment (accept real transaction).
+  //   isProduction: false,
+  //   serverKey: "SB-Mid-server-fy6I1u7MkJ2HC8EU8WFwPMBr",
+  // });
 
-  try {
-    const transaction = await snap.createTransaction(parameter);
-    const transactionToken = await transaction.token;
-    res.send({
-      transactionToken: transactionToken,
-      transactionDetail: transaction,
-    });
-  } catch (error) {
-    console.log(error);
-    res.send({ transaction: "failed" });
-  }
+  // let parameter = {
+  //   transaction_details: {
+  //     order_id: order_id,
+  //     gross_amount: 10000,
+  //   },
+  //   credit_card: {
+  //     secure: true,
+  //   },
+  //   customer_details: {
+  //     first_name: "budi",
+  //     last_name: "pratama",
+  //     email: "budi.pra@example.com",
+  //     phone: "08111222333",
+  //   },
+  // };
+
+  // try {
+  //   const transaction = await snap.createTransaction(parameter);
+  //   const transactionToken = await transaction.token;
+  //   res.send({
+  //     transactionToken: transactionToken,
+  //     transactionDetail: transaction,
+  //   });
+  // } catch (error) {
+  //   console.log(error);
+  //   res.send({ transaction: "failed" });
+  // }
 });
 
 // If payment success/processed
