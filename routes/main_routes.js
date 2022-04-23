@@ -39,4 +39,63 @@ router.get("/prisma", async (req, res) => {
   return res.send(result);
 });
 
+// Mid Trans Checkout
+router.post("/checkout", async (req, res) => {
+  const { order_id } = req.body;
+  const midtransClient = require("midtrans-client");
+  // Create Snap API instance
+  let snap = new midtransClient.Snap({
+    // Set to true if you want Production Environment (accept real transaction).
+    isProduction: false,
+    serverKey: "SB-Mid-server-fy6I1u7MkJ2HC8EU8WFwPMBr",
+  });
+
+  let parameter = {
+    transaction_details: {
+      order_id: order_id,
+      gross_amount: 10000,
+    },
+    credit_card: {
+      secure: true,
+    },
+    customer_details: {
+      first_name: "budi",
+      last_name: "pratama",
+      email: "budi.pra@example.com",
+      phone: "08111222333",
+    },
+  };
+
+  try {
+    const transaction = await snap.createTransaction(parameter);
+    const transactionToken = await transaction.token;
+    res.send({
+      transactionToken: transactionToken,
+      transactionDetail: transaction,
+    });
+  } catch (error) {
+    console.log(error);
+    res.send({ transaction: "failed" });
+  }
+});
+
+// If payment success/processed
+router.post("/handle-payment", async (req, res) => {
+  // do logic if payment success here
+  console.log(req.body);
+  return res.send(JSON.stringify(req.body));
+});
+
+router.get("/payment-success", async (req, res) => {
+  return res.send({ message: "horay.. pembayaran berhasil" });
+});
+
+router.get("/payment-failed", async (req, res) => {
+  return res.send({ message: "pembayaran gagal, silahkan dicoba kembali" });
+});
+
+router.get("/payment-unfinished", async (req, res) => {
+  return res.send({ message: "yah pembayaran belum selesai, dilanju yah" });
+});
+
 module.exports = router;

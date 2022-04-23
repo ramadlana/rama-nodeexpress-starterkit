@@ -38,7 +38,7 @@ router.post("/up", async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, salt);
 
   try {
-    const save = await prisma.app_users.create({
+    await prisma.app_users.create({
       data: {
         email: email,
         username: username,
@@ -47,11 +47,10 @@ router.post("/up", async (req, res) => {
     });
     return res.status(201).send({
       message: `User ${username} created successfully`,
-      details: save,
     });
   } catch (err) {
     //   if "duplicate" in err.message
-    if (err.message.includes("duplicate")) {
+    if (err.message.includes("duplicate" | "Unique")) {
       return res.status(400).send({ message: "user already exists" });
     } else return res.status(400).send({ message: err.message });
   }

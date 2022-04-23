@@ -155,6 +155,26 @@ model rates {
   rate     Float?
 }
 
+model app_transaction {
+  id                 Int       @id @default(autoincrement())
+  va_numbers         Json?     @db.Json
+  transaction_time   DateTime? @db.Date
+  transaction_status String?   @db.VarChar(255)
+  transaction_id     String?   @db.VarChar(255)
+  status_message     String?   @db.VarChar(255)
+  status_code        String?   @db.VarChar(255)
+  signature_key      String?   @db.VarChar(255)
+  settlement_time    DateTime? @db.Date
+  payment_type       String?   @db.VarChar(255)
+  payment_amounts    String?   @db.VarChar(255)
+  order_id           String?   @db.VarChar(255)
+  merchant_id        String?   @db.VarChar(255)
+  gross_amount       String?   @db.VarChar(255)
+  fraud_status       String?   @db.VarChar(255)
+  currency           String?   @db.VarChar(255)
+  radius_user        String?   @db.VarChar(255)
+}
+
 enum RoleEnum {
   superadmin
   admin

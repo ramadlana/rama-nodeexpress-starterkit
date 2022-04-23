@@ -3,7 +3,6 @@ const permission = require("../middleware/permission");
 const router = express.Router();
 
 const { PrismaClient } = require("@prisma/client");
-const { query } = require("express");
 const prisma = new PrismaClient();
 
 router.get("/", async (req, res) => {
@@ -109,6 +108,58 @@ router.get("/alluser-cursor", async (req, res) => {
     return res.send({
       data: alluser,
     });
+  } catch (error) {
+    return res.status(400).send({ message: error.message });
+  }
+});
+
+// PROD // PROD // PROD // PROD // PROD // PROD // PROD // PROD
+router.get("/all-radius-user", async (req, res) => {
+  let { maxPerpage, page, searchBy, searchString, sortBy, sortMethod } =
+    req.query;
+  // query is string convert into INT
+  maxPerpage = parseInt(maxPerpage);
+  page = parseInt(page);
+
+  try {
+    // if req.query Thruty in searchBy and Search String
+    if (searchBy && searchString) {
+      const alluser = await prisma.radcheck.findMany({
+        where: { [searchBy]: { contains: searchString } },
+        orderBy: { [sortBy]: sortMethod },
+        take: maxPerpage,
+        skip: (page - 1) * maxPerpage,
+        select: {
+          id: true,
+          username: true,
+          expirydate: true,
+          email: true,
+          address: true,
+        },
+      });
+      return res.send({
+        data: alluser,
+      });
+    }
+
+    // If req.query Falsy in searchBy or Falsy in searchSring
+    if (!searchBy || !searchString) {
+      const alluser = await prisma.radcheck.findMany({
+        orderBy: { [sortBy]: sortMethod },
+        take: maxPerpage,
+        skip: (page - 1) * maxPerpage,
+        select: {
+          id: true,
+          username: true,
+          expirydate: true,
+          email: true,
+          address: true,
+        },
+      });
+      return res.send({
+        data: alluser,
+      });
+    }
   } catch (error) {
     return res.status(400).send({ message: error.message });
   }
