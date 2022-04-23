@@ -1,14 +1,11 @@
 // for sign in and sign up
 const express = require("express");
 const router = express.Router();
-const _ = require("lodash");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
-const cookie = require("cookie");
 
 const { PrismaClient } = require("@prisma/client");
-const { set } = require("lodash");
 const prisma = new PrismaClient();
 
 // Register new User
@@ -106,34 +103,31 @@ router.post("/in", async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    res.setHeader(
-      "Set-Cookie",
-      cookie.serialize("access_token", token, {
-        // DEV Option (localhost and HTTP)
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        maxAge: 3600,
-        path: "/",
-        // END DEV Option
-        //
-        // PROD (RemoteHost API Backend And HTTPS)
-        // httpOnly: true,
-        // secure: false,
-        // sameSite: "none",
-        // maxAge: 3600,
-        // path: "/",
-        // END PROD (RemoteHost API Backend And HTTPS)
-      })
-    );
+    // res.setHeader(
+    //   "Set-Cookie",
+    //   cookie.serialize("access_token", token, {
+    //     // DEV Option (localhost and HTTP)
+    //     httpOnly: true,
+    //     secure: false,
+    //     sameSite: "lax",
+    //     maxAge: 3600,
+    //     path: "/",
+    //     // END DEV Option
+    //     //
+    //     // PROD (RemoteHost API Backend And HTTPS)
+    //     // httpOnly: true,
+    //     // secure: false,
+    //     // sameSite: "none",
+    //     // maxAge: 3600,
+    //     // path: "/",
+    //     // END PROD (RemoteHost API Backend And HTTPS)
+    //   })
+    // );
 
     // Return token in Body
     return res.send({
       message: "login success",
-      userInfo: {
-        id: user.id,
-        username: user.username,
-      },
+      access_token: token,
     });
   } catch (error) {
     return res.status(500).send({ error: error.message });
