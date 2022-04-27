@@ -3,7 +3,7 @@ const router = express.Router();
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-
+const sha = require("js-sha512");
 // Start routes
 
 // Home
@@ -11,82 +11,107 @@ router.get("/", async (req, res) => {
   return res.status(200).send({ message: "this is home page" });
 });
 
-router.post("/prisma", async (req, res) => {
-  try {
-    const newUser = await prisma.radcheck.create({
-      data: {
-        username: "Alice",
-        attribute: "Cleartext-Password",
-        op: ":=",
-        value: "passwordalice",
-        expirydate: new Date("2022-04-11"),
-      },
-    });
-    return res.send(newUser);
-  } catch (error) {
-    if (error.code === "P2002")
-      return res.send({ message: `${error.meta.target} must be unique` });
-    return res.send(error);
-  }
-});
-
-router.get("/prisma", async (req, res) => {
-  const result = await prisma.radcheck.findUnique({
-    where: {
-      username: "Alice",
-    },
-  });
-  return res.send(result);
-});
-
 // Mid Trans Checkout
 router.get("/checkout", async (req, res) => {
   const { order_id } = req.query;
-  console.log(req.query);
-  return res.send("ok");
-  // const midtransClient = require("midtrans-client");
 
-  // // Create Snap API instance
-  // let snap = new midtransClient.Snap({
-  //   // Set to true if you want Production Environment (accept real transaction).
-  //   isProduction: false,
-  //   serverKey: "SB-Mid-server-fy6I1u7MkJ2HC8EU8WFwPMBr",
-  // });
+  const gross_amount = "50000.00";
+  const status_code = 200;
+  // const gross_amount = 10000;
+  const serverkey = "SB-Mid-server-fy6I1u7MkJ2HC8EU8WFwPMBr";
 
-  // let parameter = {
-  //   transaction_details: {
-  //     order_id: order_id,
-  //     gross_amount: 10000,
-  //   },
-  //   credit_card: {
-  //     secure: true,
-  //   },
-  //   customer_details: {
-  //     first_name: "budi",
-  //     last_name: "pratama",
-  //     email: "budi.pra@example.com",
-  //     phone: "08111222333",
-  //   },
-  // };
+  const midtransClient = require("midtrans-client");
 
-  // try {
-  //   const transaction = await snap.createTransaction(parameter);
-  //   const transactionToken = await transaction.token;
-  //   res.send({
-  //     transactionToken: transactionToken,
-  //     transactionDetail: transaction,
-  //   });
-  // } catch (error) {
-  //   console.log(error);
-  //   res.send({ transaction: "failed" });
-  // }
+  // Create Snap API instance
+  let snap = new midtransClient.Snap({
+    // Set to true if you want Production Environment (accept real transaction).
+    isProduction: false,
+    serverKey: "SB-Mid-server-fy6I1u7MkJ2HC8EU8WFwPMBr",
+  });
+
+  let parameter = {
+    transaction_details: {
+      order_id: order_id,
+      gross_amount: gross_amount,
+    },
+    credit_card: {
+      secure: true,
+    },
+    customer_details: {
+      first_name: "hidayah",
+      last_name: "ramadlana",
+      email: "hidayah.pra@gmail.com",
+      phone: "08111222333",
+    },
+  };
+
+  const signature_key = sha.sha512(
+    order_id + status_code + gross_amount + serverkey
+  );
+
+  // Save to table transaction
+  try {
+    const save = await prisma.app_transaction.create({
+      data: {
+        order_id: order_id,
+        signature_key: signature_key,
+        transaction_status: "pending",
+      },
+    });
+  } catch (error) {
+    res.send({ error: error });
+  }
+
+  try {
+    const transaction = await snap.createTransaction(parameter);
+    const transactionToken = await transaction.token;
+    res.send({
+      transactionToken: transactionToken,
+      transactionDetail: transaction,
+    });
+  } catch (error) {
+    res.send({
+      transaction: "failed",
+      error_messages: error.ApiResponse
+        ? error.ApiResponse.error_messages[0]
+        : JSON.stringify(error),
+    });
+  }
 });
 
-// If payment success/processed
+// Midtrans POST payment handle -> If payment success enable radius account
 router.post("/handle-payment", async (req, res) => {
-  // do logic if payment success here
-  console.log(req.body);
-  return res.send(JSON.stringify(req.body));
+  // get data from req.body HOOK midtrans
+  const {
+    status_code,
+    order_id,
+    gross_amount,
+    signature_key,
+    transaction_status,
+  } = req.body;
+
+  // get signature_key from app_transaction
+  const app_transaction_db = await prisma.app_transaction.findUnique({
+    where: {
+      order_id: order_id,
+    },
+  });
+
+  // if generated signature key from checkout match with signature key from midtrans
+  if (app_transaction_db.signature_key === signature_key) {
+    // do logic if payment success here
+    await prisma.app_transaction.update({
+      where: { order_id: order_id },
+      data: {
+        status_code: status_code,
+        gross_amount: gross_amount,
+        transaction_status: transaction_status,
+      },
+    });
+    return res.send({ message: "success" });
+  }
+
+  return res.send({ message: "error" });
 });
 
 router.get("/payment-success", async (req, res) => {

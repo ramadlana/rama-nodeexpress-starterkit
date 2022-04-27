@@ -87,18 +87,22 @@ model radacct {
 }
 
 model radcheck {
-  id              Int               @id @default(autoincrement())
-  username        String            @unique(map: "unique") @default("")
-  attribute       String            @default("Cleartext-Password")
-  op              String            @default(":=") @db.VarChar(2)
-  value           String            @default("")
-  expirydate      DateTime?         @db.Date
-  email           String?           @db.VarChar(255)
-  address         String?           @db.VarChar(255)
-  first_name      String?           @db.VarChar(255)
-  last_name       String?           @db.VarChar(255)
-  phone           String?           @db.VarChar(255)
+  id              Int                       @id @default(autoincrement())
+  username        String                    @unique(map: "unique") @default("")
+  attribute       String                    @default("Cleartext-Password")
+  op              String                    @default(":=") @db.VarChar(2)
+  value           String                    @default("")
+  expirydate      DateTime?                 @db.Date
+  email           String?                   @db.VarChar(255)
+  address         String?                   @db.VarChar(255)
+  first_name      String?                   @db.VarChar(255)
+  last_name       String?                   @db.VarChar(255)
+  phone           String?                   @db.VarChar(255)
+  services        String?                   @db.VarChar(32)
+  service_status  service_status_type_enum?
+  app_service     app_service?              @relation(fields: [services], references: [service_name], onDelete: Cascade, map: "service_name_fk")
   app_transaction app_transaction[]
+  radusergroup    radusergroup[]
 
   @@index([username, attribute], map: "radcheck_username")
 }
@@ -114,11 +118,12 @@ model radgroupcheck {
 }
 
 model radgroupreply {
-  id        Int    @id @default(autoincrement())
-  groupname String @default("")
-  attribute String @default("")
-  op        String @default("=") @db.VarChar(2)
-  value     String @default("")
+  id          Int         @id @default(autoincrement())
+  groupname   String      @default("")
+  attribute   String      @default("")
+  op          String      @default("=") @db.VarChar(2)
+  value       String      @default("")
+  app_service app_service @relation(fields: [groupname], references: [service_name], onDelete: Cascade, map: "groupname")
 
   @@index([groupname, attribute], map: "radgroupreply_groupname")
 }
@@ -144,10 +149,12 @@ model radreply {
 }
 
 model radusergroup {
-  id        Int    @id @default(autoincrement())
-  username  String @default("")
-  groupname String @default("")
-  priority  Int    @default(0)
+  id          Int         @id @default(autoincrement())
+  username    String      @default("")
+  groupname   String      @default("")
+  priority    Int         @default(0)
+  app_service app_service @relation(fields: [groupname], references: [service_name], onDelete: Cascade, map: "fk_group_service")
+  radcheck    radcheck    @relation(fields: [username], references: [username], onDelete: Cascade, map: "fk_username")
 
   @@index([username], map: "radusergroup_username")
 }
@@ -160,7 +167,6 @@ model rates {
 }
 
 model app_transaction {
-  id                 Int       @id @default(autoincrement())
   va_numbers         Json?     @db.Json
   transaction_time   DateTime? @db.Date
   transaction_status String?   @db.VarChar(255)
@@ -171,13 +177,22 @@ model app_transaction {
   settlement_time    DateTime? @db.Date
   payment_type       String?   @db.VarChar(255)
   payment_amounts    String?   @db.VarChar(255)
-  order_id           String?   @db.VarChar(255)
+  order_id           String    @id @unique(map: "order_id_unique") @db.VarChar(255)
   merchant_id        String?   @db.VarChar(255)
   gross_amount       String?   @db.VarChar(255)
   fraud_status       String?   @db.VarChar(255)
   currency           String?   @db.VarChar(255)
   radcheck_id        Int?
   radcheck           radcheck? @relation(fields: [radcheck_id], references: [id], onDelete: Cascade, map: "radcheck_id")
+}
+
+model app_service {
+  service_name    String          @id @unique(map: "service_name_unique") @db.VarChar(255)
+  service_ammount String?         @db.VarChar(255)
+  service_period  Int?
+  radcheck        radcheck[]
+  radgroupreply   radgroupreply[]
+  radusergroup    radusergroup[]
 }
 
 enum RoleEnum {
@@ -189,4 +204,11 @@ enum RoleEnum {
   level2
   level3
   level4
+}
+
+enum service_status_type_enum {
+  active
+  suspend
+  terimated
+  registered
 }
