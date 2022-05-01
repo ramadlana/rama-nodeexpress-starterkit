@@ -1,3 +1,4 @@
 .deta/
 node_modules/
 error.log
+test-ignoreme.js
