@@ -3,7 +3,8 @@ const mappingUrlToRule = require("../routes/route_mapping");
 
 function permission() {
   return (req, res, next) => {
-    const jwt_decode = jwt.decode(req.cookies[`${process.env.TOKEN_NAMING}`]);
+    // get JWT
+    const jwt_decode = jwt.decode(req.headers[`${process.env.X_TOKEN_NAMING}`]);
     // get object matched with req.baseUrl
     let group_get = mappingUrlToRule.find((o) => {
       return o.url === req.baseUrl;

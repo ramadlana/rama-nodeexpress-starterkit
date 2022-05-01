@@ -9,7 +9,7 @@ const { PrismaClient, Prisma } = require("@prisma/client");
 const dayjs = require("dayjs");
 const prisma = new PrismaClient();
 
-router.get("/", async (req, res) => {
+router.get("/", permission(), async (req, res) => {
   return res.send({
     message: "Successfully Authenticated",
   });
@@ -218,7 +218,7 @@ router.get("/checkout", async (req, res) => {
 });
 
 // Get all radius user
-router.get("/all-radius-user", async (req, res) => {
+router.get("/all-radius-user", permission(), async (req, res) => {
   let { maxPerpage, page, searchBy, searchString, sortBy, sortMethod } =
     req.query;
   // query is string convert into INT
