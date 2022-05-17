@@ -221,7 +221,6 @@ router.get("/checkout", async (req, res) => {
 router.get("/all-radius-user", permission(), async (req, res) => {
   let { maxPerpage, page, searchBy, searchString, sortBy, sortMethod } =
     req.query;
-  console.log(sortBy);
   // query is string convert into INT
   maxPerpage = parseInt(maxPerpage);
   page = parseInt(page);
@@ -409,7 +408,6 @@ router.patch("/radiususer", async (req, res) => {
     email,
     services_id,
   } = editedData;
-  console.log(editedData);
   try {
     const current_user = await prisma.radcheck.findUnique({
       where: { id: id },
@@ -479,8 +477,17 @@ router.get("/getservices", async (req, res) => {
       },
     });
     return res.send({ data: services });
-  } catch (error) {
-    console.log(error);
-  }
+  } catch (error) {}
+});
+
+// payment history
+router.get("/payment-history/:id", async (req, res) => {
+  const { id } = req.params;
+  const payments = await prisma.app_transaction.findMany({
+    where: { radcheck_id: parseInt(id) },
+    orderBy: { transaction_time: "desc" },
+    take: 15,
+  });
+  return res.send(payments);
 });
 module.exports = router;
