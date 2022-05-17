@@ -53,7 +53,47 @@ router.post("/handle-payment", async (req, res) => {
   if (app_transaction_db.signature_key === signature_key) {
     // do logic if payment success here
 
-    // Save to DB
+    // find order id in app_transaction
+    const order_id_transaction = await prisma.app_transaction.findUnique({
+      where: { order_id: parseInt(order_id) },
+    });
+
+    // if status is register, change radcheck table. change user service_status to active. extend expiry date = today+30day
+    const user_radcheck = await prisma.radcheck.findUnique({
+      where: { id: order_id_transaction.radcheck_id },
+    });
+
+    if (
+      user_radcheck.service_status === "registered" ||
+      user_radcheck.service_status === "suspend"
+    ) {
+      // set expiry date +30 day from TODAY
+      await prisma.radcheck.update({
+        where: { id: parseInt(user_radcheck.id) },
+        data: {
+          service_status: "active",
+          expirydate: dayjs().add(30, "day").format(),
+        },
+      });
+
+      // change radiusgroup to service
+      await prisma.radusergroup.update({
+        where: { id: parseInt(user_radcheck.radusergroup_id) },
+        data: { groupname: user_radcheck.services_id },
+      });
+    }
+
+    if (user_radcheck.service_status === "active") {
+      await prisma.radcheck.update({
+        where: { id: parseInt(user_radcheck.id) },
+        data: {
+          service_status: "active",
+          expirydate: dayjs(user_radcheck.expirydate).add(30, "day").format(),
+        },
+      });
+    }
+
+    // Save change to DB
     try {
       await prisma.app_transaction.update({
         where: { order_id: parseInt(order_id) },
