@@ -24,6 +24,8 @@ var job = new CronJob(
       },
     });
 
+    console.log(users_expired);
+
     users_expired.forEach(async (element) => {
       console.log(element);
       exec(
@@ -48,7 +50,7 @@ var job = new CronJob(
     });
 
     // Update radcheck
-    const expiry = await prisma.radcheck.updateMany({
+    await prisma.radcheck.updateMany({
       where: {
         service_status: "active",
         expirydate: {
