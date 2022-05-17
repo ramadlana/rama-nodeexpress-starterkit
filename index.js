@@ -11,7 +11,7 @@ app.use(cookieParser());
 
 // simulate delay
 app.use((req, res, next) => {
-  setTimeout(() => next(), 300);
+  setTimeout(() => next(), 200);
 });
 
 // Import required library

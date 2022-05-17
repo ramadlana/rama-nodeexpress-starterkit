@@ -12,7 +12,9 @@ function permission() {
     if (group_get.group.includes(jwt_decode.roles)) return next();
     return res
       .status(401)
-      .send({ error: "Sorry.. You dont have permission to access this url" });
+      .send({
+        message: "Sorry.. You dont have permission to access this page",
+      });
   };
 }
 

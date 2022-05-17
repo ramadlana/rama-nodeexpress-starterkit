@@ -221,11 +221,35 @@ router.get("/checkout", async (req, res) => {
 router.get("/all-radius-user", permission(), async (req, res) => {
   let { maxPerpage, page, searchBy, searchString, sortBy, sortMethod } =
     req.query;
+  console.log(sortBy);
   // query is string convert into INT
   maxPerpage = parseInt(maxPerpage);
   page = parseInt(page);
 
   try {
+    // If searchby ID
+    if (searchBy === "id") {
+      const alluser = await prisma.radcheck.findUnique({
+        where: { [searchBy]: parseInt(searchString) || 0 },
+        select: {
+          id: true,
+          username: true,
+          expirydate: true,
+          email: true,
+          address: true,
+          first_name: true,
+          last_name: true,
+          phone: true,
+        },
+      });
+
+      if (!alluser)
+        return res.send({
+          data: [],
+        });
+
+      return res.send({ data: [alluser] });
+    }
     // if req.query Thruty in searchBy and Search String
     if (searchBy && searchString) {
       const alluser = await prisma.radcheck.findMany({
@@ -244,6 +268,10 @@ router.get("/all-radius-user", permission(), async (req, res) => {
           phone: true,
         },
       });
+      if (!alluser)
+        return res.send({
+          data: [],
+        });
       return res.send({
         data: alluser,
       });
@@ -266,6 +294,10 @@ router.get("/all-radius-user", permission(), async (req, res) => {
           phone: true,
         },
       });
+      if (!alluser)
+        return res.send({
+          data: [],
+        });
       return res.send({
         data: alluser,
       });
@@ -358,6 +390,7 @@ router.patch("/radiususer", async (req, res) => {
     address: Joi.string().required(),
     phone: Joi.string().required(),
     email: Joi.string().email().required(),
+    services_id: Joi.string(),
   });
   // Joi Validate
   const formValidate = formSchema.validate(editedData);
@@ -366,13 +399,49 @@ router.patch("/radiususer", async (req, res) => {
     return res
       .status(401)
       .send({ message: formValidate.error.details[0].message });
-  const { id, username, first_name, last_name, address, phone, email } =
-    editedData;
+  const {
+    id,
+    username,
+    first_name,
+    last_name,
+    address,
+    phone,
+    email,
+    services_id,
+  } = editedData;
+  console.log(editedData);
   try {
-    const check_status = await prisma.radcheck.findUnique({
+    const current_user = await prisma.radcheck.findUnique({
       where: { id: id },
-      include: { radusergroup: true },
+      include: { radusergroup: true, app_service: true },
     });
+
+    const new_services = await prisma.app_service.findUnique({
+      where: { service_name: services_id },
+    });
+
+    if (services_id) {
+      if (current_user.service_status === "active") {
+        // change service id
+        await prisma.radcheck.update({
+          where: { id: id },
+          data: {
+            services_id: services_id,
+          },
+        });
+        // change radusergroup
+        await prisma.radusergroup.update({
+          where: { id: current_user.radusergroup_id },
+          data: {
+            groupname: services_id,
+          },
+        });
+        return res.send({ message: "Services Change success" });
+      }
+      return res
+        .status(403)
+        .send({ message: "Account must be active before change service" });
+    }
 
     await prisma.radcheck.update({
       where: { id: id },

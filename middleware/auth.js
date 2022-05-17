@@ -22,9 +22,17 @@ function auth_midleware(req, res, next) {
     // continue chaining
   } catch (err) {
     if (err.message.includes("invalid"))
-      res
+      return res.status(401).send({
+        message: "You must logged in to access this page",
+        detail: err.message,
+      });
+    if (err.message.includes("jwt malformed"))
+      return res
         .status(401)
-        .send({ message: "Token is invalid", detail: err.message });
+        .send({
+          message: "You must logged in to access this page",
+          detail: err.message,
+        });
     else res.status(401).send({ message: err.message });
   }
 }
