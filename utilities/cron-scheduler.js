@@ -27,7 +27,6 @@ var job = new CronJob(
     console.log(users_expired);
 
     users_expired.forEach(async (element) => {
-      console.log(element);
       exec(
         `echo "User-Name='${element.username}'" | /usr/bin/radclient -c '1' -n '3' -r '3' -t '3' -x '192.168.16.10:3799' 'disconnect' 'mikrotik'`,
         (error, stdout, stderr) => {
