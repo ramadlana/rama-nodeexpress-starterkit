@@ -7,7 +7,9 @@ const sha = require("js-sha512");
 
 const { PrismaClient, Prisma } = require("@prisma/client");
 const dayjs = require("dayjs");
+const send_whatsapp = require("../utilities/send-whatsapp");
 const prisma = new PrismaClient();
+const axios = require("axios").default;
 
 router.get("/", permission(), async (req, res) => {
   return res.send({
@@ -307,12 +309,28 @@ router.get("/all-radius-user", permission(), async (req, res) => {
 });
 
 // Get single radius user and detail
-router.get("/radiususer/:id", async (req, res) => {
+router.get("/radiususer/:id", permission(), async (req, res) => {
   const { id } = req.params;
   const user = await prisma.radcheck.findUnique({
     where: { id: parseInt(id) },
     include: { app_service: true, radusergroup: true },
   });
+  delete user.value;
+  delete user.attribute;
+  delete user.op;
+  res.send({ user: user });
+});
+
+// Get single radius user and detail for ME user
+router.get("/radiususer_me/:id", async (req, res) => {
+  const { id } = req.params;
+  const user = await prisma.radcheck.findUnique({
+    where: { id: parseInt(id) },
+    include: { app_service: true, radusergroup: true },
+  });
+  delete user.value;
+  delete user.attribute;
+  delete user.op;
   res.send({ user: user });
 });
 
@@ -366,7 +384,16 @@ router.post("/radiususer", async (req, res) => {
         },
       },
     });
-    return res.send(new_radius_user);
+
+    const message_body = `Halo ${new_radius_user.first_name} ${new_radius_user.last_name}. Registrasi berhasil dilakukan dengan detail sebagai berikut\n\nusername\t: ${new_radius_user.username}\npassword \t: ${new_radius_user.value}\n\nRahasiakan password anda dari pihak manapun. Username dan Password juga dapat digunakan untuk login pada customer portal ${process.env.FRONTEND_DOMAIN}customer\n\nNo HP terhubung\t: ${new_radius_user.phone}\nAlamat\t: ${new_radius_user.address}\nservice\t: ${new_radius_user.services_id}\n
+    \nSaat ini internet anda belum aktif silahkan selesaikan pembayaran di link berikut untuk menyelesaikan aktivasi  \n \n${process.env.PUBLIC_DOMAIN}pay-order?id=${new_radius_user.id}\n\n Setelah pembayaran sukses Internet akan aktif secara otomatis \n\nTerimakasih\nJAYANET`;
+
+    const send_wa = await send_whatsapp(
+      `${new_radius_user.phone}`,
+      message_body
+    );
+
+    return res.send({ message: send_wa?.data.message });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       // The .code property can be accessed in a type-safe manner
@@ -390,6 +417,7 @@ router.patch("/radiususer", async (req, res) => {
     phone: Joi.string().required(),
     email: Joi.string().email().required(),
     services_id: Joi.string(),
+    isChangeService: Joi.boolean(),
   });
   // Joi Validate
   const formValidate = formSchema.validate(editedData);
@@ -407,18 +435,16 @@ router.patch("/radiususer", async (req, res) => {
     phone,
     email,
     services_id,
+    isChangeService,
   } = editedData;
+
   try {
     const current_user = await prisma.radcheck.findUnique({
       where: { id: id },
       include: { radusergroup: true, app_service: true },
     });
 
-    const new_services = await prisma.app_service.findUnique({
-      where: { service_name: services_id },
-    });
-
-    if (services_id) {
+    if (isChangeService) {
       if (current_user.service_status === "active") {
         // change service id
         await prisma.radcheck.update({
@@ -434,7 +460,7 @@ router.patch("/radiususer", async (req, res) => {
             groupname: services_id,
           },
         });
-        return res.send({ message: "Services Change success" });
+        return res.send({ message: "Change Service Success" });
       }
       return res
         .status(403)
@@ -489,5 +515,90 @@ router.get("/payment-history/:id", async (req, res) => {
     take: 15,
   });
   return res.send(payments);
+});
+
+// Get admin user
+router.get("/admin-user", permission(), async (req, res) => {
+  let { maxPerpage, page, searchBy, searchString, sortBy, sortMethod } =
+    req.query;
+  // query is string convert into INT
+  maxPerpage = parseInt(maxPerpage);
+  page = parseInt(page);
+
+  const search_by_id = {
+    where: { [searchBy]: parseInt(searchString) || 0 },
+    select: {
+      username: true,
+      email: true,
+      id: true,
+      isActive: true,
+      roles: true,
+    },
+  };
+
+  const search_by_thurty = {
+    where: { [searchBy]: { contains: searchString } },
+    orderBy: { [sortBy]: sortMethod },
+    take: maxPerpage,
+    skip: (page - 1) * maxPerpage,
+    select: {
+      username: true,
+      email: true,
+      id: true,
+      isActive: true,
+      roles: true,
+    },
+  };
+
+  const no_search_string = {
+    orderBy: { [sortBy]: sortMethod },
+    take: maxPerpage,
+    skip: (page - 1) * maxPerpage,
+    select: {
+      username: true,
+      email: true,
+      id: true,
+      isActive: true,
+      roles: true,
+    },
+  };
+  try {
+    // If searchby ID
+    if (searchBy === "id") {
+      const alluser = await prisma.app_users.findUnique(search_by_id);
+
+      if (!alluser)
+        return res.send({
+          data: [],
+        });
+
+      return res.send({ data: [alluser] });
+    }
+    // if req.query Thruty in searchBy and Search String
+    if (searchBy && searchString) {
+      const alluser = await prisma.app_users.findMany(search_by_thurty);
+      if (!alluser)
+        return res.send({
+          data: [],
+        });
+      return res.send({
+        data: alluser,
+      });
+    }
+
+    // If req.query Falsy in searchBy or Falsy in searchSring
+    if (!searchBy || !searchString) {
+      const alluser = await prisma.app_users.findMany(no_search_string);
+      if (!alluser)
+        return res.send({
+          data: [],
+        });
+      return res.send({
+        data: alluser,
+      });
+    }
+  } catch (error) {
+    return res.status(400).send({ message: error.message });
+  }
 });
 module.exports = router;

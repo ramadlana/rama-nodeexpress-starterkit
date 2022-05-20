@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const sha = require("js-sha512");
+const midtransClient = require("midtrans-client");
 
 // Dayjs Import
 const dayjs = require("dayjs");
@@ -16,6 +18,105 @@ const prisma = new PrismaClient();
 // Home
 router.get("/", async (req, res) => {
   return res.status(200).send({ message: "Billing Management System" });
+});
+
+// Generate Payment (PUBLIC URL). Access from whatsapp and other public
+router.get("/pay-order", async (req, res) => {
+  // Get id from params
+  const { id } = req.query;
+
+  // Get user attributes from radcheck table
+  const user = await prisma.radcheck.findUnique({
+    where: { id: parseInt(id) },
+    include: { app_service: true },
+  });
+
+  if (!user) return res.send({ error: "user not found" });
+
+  // Get gross_ammount, status_code, and order_id in order to generate signature key in transaction table
+  const gross_amount = user.app_service.service_ammount;
+  const status_code = 200;
+  const serverkey = process.env.SERVER_KEY_MIDTRANS;
+
+  let order_id;
+
+  // Create app_transaction item in order generate order_id
+  try {
+    const transaction = await prisma.app_transaction.create({
+      data: {
+        gross_amount: gross_amount,
+        radcheck_id: parseInt(id),
+        transaction_time: new Date(),
+      },
+    });
+
+    order_id = transaction.order_id;
+  } catch (error) {
+    return res.send({
+      error: "error when creating transaction",
+      detail: error.message,
+    });
+  }
+
+  // Generate signature key
+  const signature_key = sha.sha512(
+    // convert orderId to string, and add .00 to gross amount because midtrans using .00 after gross ammount, for ex: 50000.00
+    order_id.toString() + status_code + gross_amount + ".00" + serverkey
+  );
+
+  // Update app_transaction
+  try {
+    await prisma.app_transaction.update({
+      where: {
+        order_id: order_id,
+      },
+      data: {
+        signature_key: signature_key,
+        transaction_status: "pending",
+      },
+    });
+  } catch (error) {
+    return res.send({ error: error.message });
+  }
+
+  try {
+    // Create Snap API instance
+    let snap = new midtransClient.Snap({
+      // Set to true if you want Production Environment (accept real transaction).
+      isProduction:
+        process.env.IS_PRODUCTION_MIDTRANS === "false" ? false : true,
+      serverKey: process.env.SERVER_KEY_MIDTRANS,
+    });
+
+    let parameter = {
+      transaction_details: {
+        order_id: order_id,
+        gross_amount: gross_amount,
+      },
+      credit_card: {
+        secure: true,
+      },
+      customer_details: {
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        phone: user.phone,
+      },
+    };
+    const transaction = await snap.createTransaction(parameter);
+    return res.status(301).redirect(`${transaction.redirect_url}`);
+    // res.send({
+    //   transactionToken: transactionToken,
+    //   transactionDetail: transaction,
+    // });
+  } catch (error) {
+    res.send({
+      error: "failed when creating payment gateway process",
+      error_messages: error.ApiResponse
+        ? error.ApiResponse.error_messages[0]
+        : JSON.stringify(error),
+    });
+  }
 });
 
 // Midtrans POST payment handle -> If payment success enable radius account

@@ -39,12 +39,15 @@ logging_func();
 // Public Routes Controllers
 app.use(require("./routes/main_routes")); // main routes
 app.use("/sign", require("./routes/sign_routes"));
+app.use("/customer", require("./routes/customer_login")); // customer portal route
 
 // Start Auth Middleware, All routes after this need auth process
 app.use(auth_midleware);
 
 // Need Login Routes Controllers
 app.use("/dashboard", require("./routes/dashboard_routes")); // admin routes
+
+app.use("/me", require("./routes/customer_me")); // redirect me page
 
 app.use(function (err, req, res, next) {
   console.error(err.stack);
