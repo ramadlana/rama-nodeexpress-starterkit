@@ -101,6 +101,8 @@ model radcheck {
   services_id     String?                   @db.VarChar(32)
   service_status  service_status_type_enum?
   radusergroup_id Int?
+  latitude_       String?                   @map("latitude ") @db.VarChar(255)
+  longitude       String?                   @db.VarChar(255)
   radusergroup    radusergroup?             @relation(fields: [radusergroup_id], references: [id], onDelete: Cascade, map: "radusegroup_fk")
   app_service     app_service?              @relation(fields: [services_id], references: [service_name], onDelete: NoAction, onUpdate: NoAction, map: "service_name_fk")
   app_transaction app_transaction[]
