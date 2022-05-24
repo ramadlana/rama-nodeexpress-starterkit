@@ -32,9 +32,23 @@ router.get("/pay-order", async (req, res) => {
   });
 
   if (!user) return res.send({ error: "user not found" });
+  // let gross_amount;
+
+  // if (user.service_status === "registered") {
+  //   gross_amount = (
+  //     250000 + parseInt(user.app_service.service_ammount)
+  //   ).toString();
+  // }
 
   // Get gross_ammount, status_code, and order_id in order to generate signature key in transaction table
-  const gross_amount = user.app_service.service_ammount;
+  let gross_amount = user.app_service.service_ammount;
+
+  if (user.service_status === "registered") {
+    gross_amount = (
+      parseInt(user.app_service.service_ammount) +
+      parseInt(user.app_service.installation_fee)
+    ).toString();
+  }
   const status_code = 200;
   const serverkey = process.env.SERVER_KEY_MIDTRANS;
 
