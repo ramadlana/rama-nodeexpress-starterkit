@@ -423,7 +423,7 @@ router.post("/radiususer", async (req, res) => {
     });
 
     const message_body = `Halo ${new_radius_user.first_name} ${new_radius_user.last_name}. Registrasi berhasil dilakukan dengan detail sebagai berikut\n\nusername\t: ${new_radius_user.username}\npassword \t: ${new_radius_user.value}\n\nRahasiakan password anda dari pihak manapun. Username dan Password juga dapat digunakan untuk login pada customer portal ${process.env.FRONTEND_DOMAIN}customer\n\nNo HP terhubung\t: ${new_radius_user.phone}\nAlamat\t: ${new_radius_user.address}\nservice\t: ${new_radius_user.services_id}\n
-    \nSaat ini internet anda belum aktif silahkan selesaikan pembayaran di link berikut untuk menyelesaikan aktivasi  \n \n${process.env.PUBLIC_DOMAIN}pay-order?id=${new_radius_user.id}\n\n Setelah pembayaran sukses Internet akan aktif secara otomatis \n\nTerimakasih\nJAYANET`;
+    \nSaat ini internet anda belum aktif silahkan selesaikan pembayaran di link berikut untuk menyelesaikan aktivasi  \n \n${process.env.FRONTEND_DOMAIN}/payments/pay-order?id=${new_radius_user.id}\n\n Setelah pembayaran sukses Internet akan aktif secara otomatis \n\nTerimakasih\nJAYANET`;
 
     const send_wa = await send_whatsapp(
       `${new_radius_user.phone}`,
