@@ -32,13 +32,6 @@ router.get("/pay-order", async (req, res) => {
   });
 
   if (!user) return res.send({ error: "user not found" });
-  // let gross_amount;
-
-  // if (user.service_status === "registered") {
-  //   gross_amount = (
-  //     250000 + parseInt(user.app_service.service_ammount)
-  //   ).toString();
-  // }
 
   // Get gross_ammount, status_code, and order_id in order to generate signature key in transaction table
   let gross_amount = user.app_service.service_ammount;
@@ -66,6 +59,7 @@ router.get("/pay-order", async (req, res) => {
 
     order_id = transaction.order_id;
   } catch (error) {
+    console.log(error.message);
     return res.send({
       error: "error when creating transaction",
       detail: error.message,
@@ -118,12 +112,11 @@ router.get("/pay-order", async (req, res) => {
       },
     };
     const transaction = await snap.createTransaction(parameter);
-    return res.status(301).redirect(`${transaction.redirect_url}`);
-    // res.send({
-    //   transactionToken: transactionToken,
-    //   transactionDetail: transaction,
-    // });
+    res.send({
+      transactionDetail: transaction,
+    });
   } catch (error) {
+    console.log(error);
     res.send({
       error: "failed when creating payment gateway process",
       error_messages: error.ApiResponse
