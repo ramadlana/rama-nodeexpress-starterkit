@@ -159,8 +159,7 @@ router.post("/handle-payment", async (req, res) => {
 
   // if generated signature key from checkout match with signature key from midtrans
   if (app_transaction_db.signature_key === signature_key) {
-    // do logic if payment success here
-
+    // do logic if payment SUCCESS here
     // find order id in app_transaction
     const order_id_transaction = await prisma.app_transaction.findUnique({
       where: { order_id: parseInt(order_id) },
@@ -201,7 +200,7 @@ router.post("/handle-payment", async (req, res) => {
       });
     }
 
-    // Save change to DB
+    // Save Payment change to DB
     try {
       await prisma.app_transaction.update({
         where: { order_id: parseInt(order_id) },

@@ -315,7 +315,6 @@ router.get("/radiususer/:id", permission(), async (req, res) => {
     where: { id: parseInt(id) },
     include: { app_service: true, radusergroup: true },
   });
-  delete user.value;
   delete user.attribute;
   delete user.op;
   res.send({ user: user });
@@ -344,8 +343,8 @@ router.post("/radiususer", async (req, res) => {
     phone: Joi.string().required(),
     service: Joi.string().required(),
     email: Joi.string().email().required(),
-    password: Joi.string().min(4).required(),
-    retype_password: Joi.string().min(4),
+    password: Joi.string().min(2).required(),
+    retype_password: Joi.string().min(2),
     expiry_date: Joi.date(),
   });
   // Joi Validate
@@ -449,6 +448,7 @@ router.patch("/radiususer", async (req, res) => {
     username: Joi.string().required(),
     first_name: Joi.string().required(),
     last_name: Joi.string().required(),
+    value: Joi.string(),
     address: Joi.string().required(),
     phone: Joi.string().required(),
     email: Joi.string().email().required(),
@@ -469,6 +469,7 @@ router.patch("/radiususer", async (req, res) => {
     last_name,
     address,
     phone,
+    value,
     email,
     services_id,
     isChangeService,
@@ -512,6 +513,7 @@ router.patch("/radiususer", async (req, res) => {
         first_name: first_name,
         last_name: last_name,
         phone: phone,
+        value: value,
       },
     });
     return res.send({ message: "User info updated" });
@@ -677,10 +679,8 @@ router.get("/pay-order-snap", async (req, res) => {
 
     order_id = transaction.order_id;
   } catch (error) {
-    console.log(error.message);
-    return res.send({
-      error: "error when creating transaction",
-      detail: error.message,
+    return res.status(400).send({
+      message: error.message,
     });
   }
 
@@ -702,7 +702,9 @@ router.get("/pay-order-snap", async (req, res) => {
       },
     });
   } catch (error) {
-    return res.send({ error: error.message });
+    return res.status(400).send({
+      message: error.message,
+    });
   }
 
   try {
@@ -734,12 +736,249 @@ router.get("/pay-order-snap", async (req, res) => {
       transactionDetail: transaction,
     });
   } catch (error) {
-    console.log(error);
-    res.send({
-      error: "failed when creating payment gateway process",
+    return res.status(400).send({
+      message: "failed when creating payment gateway process",
       error_messages: error.ApiResponse
         ? error.ApiResponse.error_messages[0]
         : JSON.stringify(error),
+    });
+  }
+});
+
+router.post("/app-services", async (req, res) => {
+  // get list of rules and return it
+  const formSchema = Joi.object({
+    service_name: Joi.string().required(),
+    installation_fee: Joi.number().required(),
+    service_ammount: Joi.number().required(),
+    service_period: Joi.number().required(),
+  });
+  // Joi Validate
+  const formValidate = formSchema.validate(req.body);
+  // Joi Error
+  if (formValidate.error)
+    return res.send({ error: formValidate.error.details[0].message });
+
+  const { service_name, installation_fee, service_ammount, service_period } =
+    req.body;
+  // if success
+  const new_app_service = await prisma.app_service.create({
+    data: {
+      service_name: service_name,
+      installation_fee: installation_fee,
+      service_ammount: service_ammount,
+      service_period: service_period,
+    },
+  });
+});
+
+// APP services CRUD
+router.get("/app-services", async (req, res) => {
+  const app_services = await prisma.app_service.findMany({
+    where: {
+      NOT: { service_name: { in: ["registered", "terminated", "suspend"] } },
+    },
+    include: { radgroupreply: true },
+  });
+  return res.send({ message: app_services });
+});
+
+router.patch("/app-services", async (req, res) => {
+  console.log(req.body.data);
+  let {
+    service_name,
+    service_ammount,
+    service_period,
+    installation_fee,
+    radgroupreply,
+  } = req.body.data;
+
+  // console.log(radgroupreply);
+  // overide string to int
+  service_period = parseInt(service_period);
+  try {
+    const edit = await prisma.app_service.update({
+      where: { service_name: req.body.data.service_name },
+      data: {
+        installation_fee: installation_fee,
+        service_ammount: service_ammount,
+        service_name: service_name,
+        service_period: service_period,
+      },
+    });
+  } catch (error) {
+    return res.send({ success: false, message: error.message });
+  }
+
+  // update rad group reply
+
+  radgroupreply.forEach(async (item) => {
+    try {
+      const edit2 = await prisma.radgroupreply.update({
+        where: { id: item.id },
+        data: { value: item.value },
+      });
+    } catch (error) {
+      console.log(error);
+      return res.send({ success: false, message: error.message });
+    }
+  });
+
+  return res.send({ success: true, message: "success update data" });
+});
+
+router.post("/manage-services", async (req, res) => {
+  const formSchema = Joi.object({
+    service_name: Joi.string().required(),
+    service_ammount: Joi.string().required(),
+    service_period: Joi.number().required(),
+    installation_fee: Joi.string().required(),
+    framed_pool: Joi.string().required(),
+    mikrotik_rate_limit: Joi.string().required(),
+  });
+  // Joi Validate
+  const formValidate = formSchema.validate(req.body.data);
+  // Joi Error
+  if (formValidate.error)
+    return res.send({
+      success: false,
+      message: formValidate.error.details[0].message,
+    });
+
+  // if using POST using req body
+  const {
+    service_name,
+    service_ammount,
+    service_period,
+    installation_fee,
+    framed_pool,
+    mikrotik_rate_limit,
+  } = req.body.data;
+
+  // add app_services
+  try {
+    await prisma.app_service.create({
+      data: {
+        service_name,
+        installation_fee,
+        service_ammount,
+        service_period: parseInt(service_period),
+      },
+    });
+  } catch (error) {
+    // on Fail
+    return res.send({ success: false, message: error.message });
+  }
+
+  try {
+    await prisma.radgroupreply.createMany({
+      data: [
+        {
+          groupname: service_name,
+          attribute: "Mikrotik-Rate-Limit",
+          op: ":=",
+          value: mikrotik_rate_limit,
+        },
+        {
+          groupname: service_name,
+          attribute: "Framed-Pool",
+          op: ":=",
+          value: framed_pool,
+        },
+      ],
+    });
+  } catch (error) {
+    // on Fail
+    return res.send({ success: false, message: error.message });
+  }
+
+  // On Success
+  return res.send({ success: true, message: "success update data" });
+});
+
+router.post("/deleteservices", async (req, res) => {
+  // if using POST using req body
+  const { service_name } = req.body;
+  console.log(service_name);
+
+  // delete on db
+  try {
+    await prisma.app_service.delete({
+      where: { service_name: service_name },
+    });
+  } catch (error) {
+    // on Fail
+    console.log(error.message);
+    if (error.message.includes("constraint"))
+      return res.send({
+        success: false,
+        message:
+          "Tidak bisa menghapus profile yang sedang terpakai oleh customer",
+      });
+    return res.send({ success: false, message: error });
+  }
+
+  // On Success
+  return res.send({ success: true, message: "success Delete" });
+});
+
+// Pembayaran Cash
+router.post("/cash-payment", async (req, res) => {
+  const { customer_id, gross_amount, merchant_id } = req.body.data;
+  // if status is register, change radcheck table. change user service_status to active. extend expiry date = today+30day
+  const user_radcheck = await prisma.radcheck.findUnique({
+    where: { id: parseInt(customer_id) },
+  });
+
+  if (
+    user_radcheck.service_status === "registered" ||
+    user_radcheck.service_status === "suspend"
+  ) {
+    // set expiry date +30 day from TODAY
+    await prisma.radcheck.update({
+      where: { id: parseInt(user_radcheck.id) },
+      data: {
+        service_status: "active",
+        expirydate: dayjs().add(30, "day").format(),
+      },
+    });
+
+    // change radiusgroup to service
+    await prisma.radusergroup.update({
+      where: { id: parseInt(user_radcheck.radusergroup_id) },
+      data: { groupname: user_radcheck.services_id },
+    });
+  }
+
+  if (user_radcheck.service_status === "active") {
+    await prisma.radcheck.update({
+      where: { id: parseInt(user_radcheck.id) },
+      data: {
+        service_status: "active",
+        expirydate: dayjs(user_radcheck.expirydate).add(30, "day").format(),
+      },
+    });
+  }
+
+  // Save Payment change to DB
+  try {
+    await prisma.app_transaction.create({
+      data: {
+        // create
+        transaction_time: dayjs().format(),
+        transaction_status: "settlement",
+        gross_amount: gross_amount,
+        settlement_time: dayjs().format(),
+        payment_type: "cash",
+        merchant_id: merchant_id,
+        radcheck_id: parseInt(customer_id),
+      },
+    });
+    return res.send({ success: true, message: "Cash Payment success" });
+  } catch (error) {
+    return res.send({
+      success: false,
+      error: error.message ? error.message : error,
     });
   }
 });
