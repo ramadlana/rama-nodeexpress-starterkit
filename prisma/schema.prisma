@@ -200,7 +200,7 @@ model app_service {
 model app_message {
   id              Int     @id @default(autoincrement())
   message_name    String? @db.VarChar(255)
-  message_content String? @db.VarChar(700)
+  message_content String? @db.VarChar(1500)
 }
 
 enum RoleEnum {
