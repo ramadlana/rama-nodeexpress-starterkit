@@ -320,6 +320,29 @@ router.get("/radiususer/:id", permission(), async (req, res) => {
   res.send({ user: user });
 });
 
+// delete single radius user
+router.delete("/radiususer/:id", permission(), async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const customer = await prisma.radcheck.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    const delete_customer = await prisma.radusergroup.delete({
+      where: { id: customer.radusergroup_id },
+    });
+
+    return res.send({
+      success: true,
+      message:
+        "Sukses delete customer, anda dapat kembali ke menu sebelumnya dengan menekan tombol back",
+    });
+  } catch (error) {
+    return res.send({ success: false, message: error });
+  }
+});
+
 // Get single radius user and detail for ME user
 router.get("/radiususer_me/:id", async (req, res) => {
   const { id } = req.params;
@@ -327,7 +350,6 @@ router.get("/radiususer_me/:id", async (req, res) => {
     where: { id: parseInt(id) },
     include: { app_service: true, radusergroup: true },
   });
-  delete user.value;
   delete user.attribute;
   delete user.op;
   res.send({ user: user });
@@ -421,11 +443,17 @@ router.post("/radiususer", async (req, res) => {
       },
     });
 
-    const message_body = `Halo ${new_radius_user.first_name} ${new_radius_user.last_name}. Registrasi berhasil dilakukan dengan detail sebagai berikut\n\nusername\t: ${new_radius_user.username}\npassword\t\t: ${new_radius_user.value}\nNo HP\t\t: ${new_radius_user.phone}\nAlamat\t\t: ${new_radius_user.address}\nservice\t\t: ${new_radius_user.services_id}\n\nRahasiakan password anda dari pihak manapun. Username dan Password juga dapat digunakan untuk login pada customer portal\n${process.env.WA_GW_FRONTEND_DOMAIN}customer\n\nSaat ini internet anda belum aktif silahkan selesaikan pembayaran di link berikut untuk menyelesaikan aktivasi\n${process.env.WA_GW_FRONTEND_DOMAIN}payments/pay-order?id=${new_radius_user.id}\n\nSetelah pembayaran sukses Internet akan aktif secara otomatis\nTerimakasih\n\nNB: Simpan nomor Whatsapp ini sebagai kontak untuk dapat melakukan klik Link diatas dari Whatsapp anda \n`;
+    const message_whatsapp = await prisma.app_message.findFirst({
+      where: { message_name: "register_berhasil" },
+    });
+
+    const computed_message = eval(
+      "`" + (await message_whatsapp.message_content) + "`"
+    );
 
     const send_wa = await send_whatsapp(
       `${new_radius_user.phone}`,
-      message_body
+      computed_message
     );
 
     return res.send({ message: send_wa?.data.message });

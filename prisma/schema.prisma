@@ -104,7 +104,7 @@ model radcheck {
   latitude_       Float?                    @map("latitude ") @db.Real
   longitude       Float?                    @db.Real
   radusergroup    radusergroup?             @relation(fields: [radusergroup_id], references: [id], onDelete: Cascade, map: "radusegroup_fk")
-  app_service     app_service?              @relation(fields: [services_id], references: [service_name], onDelete: NoAction, onUpdate: NoAction, map: "service_name_fk")
+  app_service     app_service?              @relation(fields: [services_id], references: [service_name], onDelete: Restrict, onUpdate: Restrict, map: "service_name_fk")
   app_transaction app_transaction[]
 
   @@index([username, attribute], map: "radcheck_username")
@@ -195,6 +195,12 @@ model app_service {
   installation_fee String?         @db.VarChar(255)
   radcheck         radcheck[]
   radgroupreply    radgroupreply[]
+}
+
+model app_message {
+  id              Int     @id @default(autoincrement())
+  message_name    String? @db.VarChar(255)
+  message_content String? @db.VarChar(700)
 }
 
 enum RoleEnum {
