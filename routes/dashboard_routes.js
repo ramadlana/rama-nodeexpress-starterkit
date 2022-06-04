@@ -432,7 +432,6 @@ router.post("/radiususer", async (req, res) => {
         username: username,
         // Convert Password key to Value. Because Freeradius using value key instead password
         value: password,
-        // expirydate: dayjs().add(30, "day").format(),
         expirydate: dayjs("2000-01-01T07:00:00").format("YYYY-MM-DDTHH:mm:ssZ"),
         email: email,
         address: address,
@@ -447,17 +446,13 @@ router.post("/radiususer", async (req, res) => {
       },
     });
 
-    const message_whatsapp = await prisma.app_message.findFirst({
+    const message_whatsapp = await prisma.app_message.find({
       where: { message_name: "register_berhasil" },
     });
-
-    console.log(message_whatsapp);
 
     const computed_message = eval(
       "`" + (await message_whatsapp.message_content) + "`"
     );
-
-    console.log(computed_message);
 
     const send_wa = await send_whatsapp(
       `${new_radius_user.phone}`,
@@ -472,8 +467,7 @@ router.post("/radiususer", async (req, res) => {
         return res.status(401).send({ message: "Username must be unique" });
       }
     }
-    console.log(e);
-    throw e;
+    return res.status(401).send({ message: e.message });
   }
 });
 
