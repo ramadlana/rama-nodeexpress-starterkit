@@ -446,7 +446,7 @@ router.post("/radiususer", async (req, res) => {
       },
     });
 
-    const message_whatsapp = await prisma.app_message.find({
+    const message_whatsapp = await prisma.app_message.findFirst({
       where: { message_name: "register_berhasil" },
     });
 
