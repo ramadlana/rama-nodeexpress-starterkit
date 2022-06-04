@@ -451,9 +451,13 @@ router.post("/radiususer", async (req, res) => {
       where: { message_name: "register_berhasil" },
     });
 
+    console.log(message_whatsapp);
+
     const computed_message = eval(
       "`" + (await message_whatsapp.message_content) + "`"
     );
+
+    console.log(computed_message);
 
     const send_wa = await send_whatsapp(
       `${new_radius_user.phone}`,
