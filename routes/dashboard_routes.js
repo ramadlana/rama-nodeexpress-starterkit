@@ -472,6 +472,7 @@ router.post("/radiususer", async (req, res) => {
         return res.status(401).send({ message: "Username must be unique" });
       }
     }
+    console.log(e);
     throw e;
   }
 });
