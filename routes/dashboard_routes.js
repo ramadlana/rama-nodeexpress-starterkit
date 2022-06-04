@@ -311,13 +311,17 @@ router.get("/all-radius-user", permission(), async (req, res) => {
 // Get single radius user and detail
 router.get("/radiususer/:id", permission(), async (req, res) => {
   const { id } = req.params;
-  const user = await prisma.radcheck.findUnique({
-    where: { id: parseInt(id) },
-    include: { app_service: true, radusergroup: true },
-  });
-  delete user.attribute;
-  delete user.op;
-  res.send({ user: user });
+  try {
+    const user = await prisma.radcheck.findUnique({
+      where: { id: parseInt(id) },
+      include: { app_service: true, radusergroup: true },
+    });
+    delete user.attribute;
+    delete user.op;
+    res.send({ user: user });
+  } catch (error) {
+    return res.status(404).send({ success: false, message: "user not found" });
+  }
 });
 
 // delete single radius user
