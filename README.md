@@ -1,4 +1,4 @@
-# nodejs-starterkit
+# Rama Nodejs starterkit
 
 #### Preparing database
 
@@ -28,10 +28,18 @@ listen_addresses = '*'
 sudo systemctl restart postgresql
 ```
 
-Step:
+#### Import sql
 
-1. Create or edit existing DB
-   if DB existing
+we can import using navicat or using command
 
-- add new table based on schema and data
-  default password test/12345678
+```
+psql -U user_test db_test < import-this-only-on-public.sql
+```
+
+```
+nodejs-starterkit/import-me-SQL/import-this-only-on-public.sql
+```
+
+#### Test API
+
+https://documenter.getpostman.com/view/8530436/VUquKats
