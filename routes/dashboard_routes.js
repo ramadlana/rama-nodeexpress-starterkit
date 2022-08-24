@@ -3,8 +3,13 @@ const permission = require("../middleware/permission");
 const router = express.Router();
 
 const { PrismaClient } = require("@prisma/client");
-const { query } = require("express");
 const prisma = new PrismaClient();
+
+// Permission list
+const adminOnly = ["superadmin", "admin"];
+const allEmployee = ["superadmin", "admin", "level1"];
+const customer = ["user", "customer"];
+const allUser = ["customer", "superadmin", "admin", "level1"];
 
 router.get("/", async (req, res) => {
   return res.send({
@@ -13,7 +18,7 @@ router.get("/", async (req, res) => {
 });
 
 //Need Auth midlleware + Permission Midleware
-router.get("/admin", permission(), async (req, res) => {
+router.get("/admin", permission(adminOnly), async (req, res) => {
   return res.send({
     message: "Successfully Authenticated",
   });
