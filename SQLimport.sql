@@ -30,7 +30,7 @@ CREATE TYPE "public"."RoleEnum" AS ENUM (
   'level3',
   'level4'
 );
-ALTER TYPE "public"."RoleEnum" OWNER TO "hidayah";
+ALTER TYPE "public"."RoleEnum" OWNER TO "user_test";
 
 -- ----------------------------
 -- Sequence structure for Country_id_seq
@@ -100,7 +100,7 @@ CREATE TABLE "public"."Person" (
 -- ----------------------------
 -- Records of Person
 -- ----------------------------
-INSERT INTO "public"."Person" VALUES (1, 'hidayah', 'prajekan', 1);
+INSERT INTO "public"."Person" VALUES (1, 'user_test', 'prajekan', 1);
 INSERT INTO "public"."Person" VALUES (2, 'bambang1', 'street 1', 2);
 INSERT INTO "public"."Person" VALUES (118, 'user112', 'address 112', 5);
 INSERT INTO "public"."Person" VALUES (4, 'bambang3', 'street 1', 2);
