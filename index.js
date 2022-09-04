@@ -9,6 +9,10 @@ const app = express();
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
 
+// Express File Upload
+const fileUpload = require("express-fileupload");
+app.use(fileUpload());
+
 // simulate delay
 // app.use((req, res, next) => {
 //   setTimeout(() => next(), 800);
