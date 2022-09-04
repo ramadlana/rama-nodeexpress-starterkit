@@ -72,7 +72,7 @@ router.get("/miniobucketfiles", async (req, res) => {
     let stream = minioClient.listObjectsV2("tes", "", true, "");
     /**
      * https://stackoverflow.com/questions/18857693/does-express-js-support-sending-unbuffered-progressively-flushed-responses
-     * res send is automatically end after send, so for emiter or sream or socket we can use res write to pass to frontend
+     * res send is automatically end after send, so for event emiter or stream or socket we can use res write to pass to frontend
      * output "chunk"/potongan argument must be of type string or an instance of Buffer or Uint8Array, object is not allowed, so we can use stringify
      */
     stream.on("data", function (obj) {
