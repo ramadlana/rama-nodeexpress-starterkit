@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 
 const { PrismaClient } = require("@prisma/client");
-const { upload } = require("../middleware/s3bucket");
 const prisma = new PrismaClient();
 
 // Minio
