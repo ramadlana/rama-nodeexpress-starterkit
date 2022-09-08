@@ -30,7 +30,7 @@ CREATE TYPE "public"."RoleEnum" AS ENUM (
   'level3',
   'level4'
 );
-ALTER TYPE "public"."RoleEnum" OWNER TO "user_test";
+ALTER TYPE "public"."RoleEnum" OWNER TO "test";
 
 -- ----------------------------
 -- Sequence structure for county_id_seq

@@ -6,9 +6,9 @@
 sudo su - postgres
 psql
 
-postgres=# CREATE USER user_test WITH PASSWORD 'password_test';
-postgres=# CREATE DATABASE db_test OWNER user_test;
-postgres=# GRANT  ALL ON DATABASE db_test TO user_test;
+postgres=# CREATE USER test WITH PASSWORD 'test';
+postgres=# CREATE DATABASE db_test OWNER test;
+postgres=# GRANT  ALL ON DATABASE db_test TO test;
 ```
 
 #### Expose From Outside
@@ -33,7 +33,7 @@ sudo systemctl restart postgresql
 we can import using navicat or using command
 
 ```
-psql -U user_test db_test < import-this-only-on-public.sql
+psql -U test db_test < import-this-only-on-public.sql
 ```
 
 ```
