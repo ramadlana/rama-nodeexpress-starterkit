@@ -8,26 +8,26 @@ datasource db {
 }
 
 model app_users {
-  id       Int      @id @default(autoincrement())
+  id       Int      @id(map: "users_pkey") @default(autoincrement())
   username String   @unique(map: "usernameUnique") @db.VarChar(255)
   password String   @db.VarChar(255)
   email    String   @unique(map: "emailUnique") @db.VarChar(255)
   roles    RoleEnum @default(user)
-  isActive  Boolean @default(false)
+  isActive Boolean? @default(false)
 }
 
 model app_dummy_person {
-  id        Int     @id @default(autoincrement())
-  name      String  @unique
-  address   String
-  app_dummy_country   app_dummy_country @relation(fields: [countryId], references: [id])
-  countryId Int
+  id                Int                @id(map: "Person_pkey") @unique(map: "idunique") @default(autoincrement())
+  name              String?
+  address           String?
+  countryId         Int?
+  app_dummy_country app_dummy_country? @relation(fields: [countryId], references: [id], onDelete: Cascade, map: "country")
 }
 
 model app_dummy_country {
-  id      Int      @id @default(autoincrement())
-  country String
-  app_dummy_person  app_dummy_person[]
+  id               Int                @id(map: "Country_pkey") @default(autoincrement())
+  country          String?
+  app_dummy_person app_dummy_person[]
 }
 
 enum RoleEnum {

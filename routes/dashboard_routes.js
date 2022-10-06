@@ -26,10 +26,36 @@ router.get("/admin", permission(adminOnly), async (req, res) => {
 
 // Get table data user with relation with country  table
 router.get("/alluser", async (req, res) => {
-  const alluser = await prisma.app_dummy_person.findMany();
-  return res.send({
-    alluser: alluser,
+  let { page, maxPerpage, searchBy, searchValue, sortBy, sortMethod } =
+    req.query;
+
+  // query is string convert into INT
+  // page is last item in previous data
+  // page queries all Post records with an ID greater than the value of page
+
+  const pageInt = parseInt(page);
+  const maxPerpageInt = parseInt(maxPerpage);
+
+  console.log({
+    include: { app_dummy_country: true },
+    where: { [searchBy]: { contains: searchValue } },
+    orderBy: { [sortBy]: sortMethod },
+    skip: pageInt,
+    take: maxPerpageInt,
   });
+  try {
+    const alluser = await prisma.app_dummy_person.findMany({
+      include: { app_dummy_country: true },
+      where: { [searchBy]: { contains: searchValue } },
+      orderBy: { [sortBy]: sortMethod },
+      skip: pageInt,
+      take: maxPerpageInt,
+    });
+
+    return res.send(alluser);
+  } catch (error) {
+    return res.status(400).send({ message: error.message });
+  }
 });
 
 // Get table data users with relation
@@ -96,24 +122,28 @@ router.get("/alluserwhererelate", async (req, res) => {
 
 // Cursor Based Pagination
 router.get("/alluser-cursor", async (req, res) => {
-  let { cursor, maxPerpage } = req.query;
+  let { cursor, maxPerpage, searchBy, searchValue, sortBy, sortMethod } =
+    req.query;
+
   // query is string convert into INT
   // Cursor is last item in previous data
   // Cursor queries all Post records with an ID greater than the value of cursor
+
   const cursorInt = parseInt(cursor);
   const maxPerpageInt = parseInt(maxPerpage);
 
   try {
     const alluser = await prisma.app_dummy_person.findMany({
+      where: { [searchBy]: { contains: searchValue } },
+      orderBy: { [sortBy]: sortMethod },
+      include: { app_dummy_country: true },
       cursor: {
         id: cursorInt,
       },
       take: maxPerpageInt,
-      include: { app_dummy_country: true },
     });
-    return res.send({
-      data: alluser,
-    });
+
+    return res.send(alluser);
   } catch (error) {
     return res.status(400).send({ message: error.message });
   }
