@@ -1,0 +1,41 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build"
+    args:
+      [
+        "build",
+        "-t",
+        "gcr.io/rama-lab/github.com/ramadlana/express:$SHORT_SHA",
+        ".",
+      ]
+
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push"
+    waitFor: ["build"]
+    args: ["push", "gcr.io/rama-lab/github.com/ramadlana/express:$SHORT_SHA"]
+
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: "deploy"
+    waitFor: ["push"]
+    args:
+      [
+        "run",
+        "deploy",
+        "expressjs",
+        "--image=gcr.io/rama-lab/github.com/ramadlana/express:$SHORT_SHA",
+        "--region=asia-southeast2",
+        "--project=rama-lab",
+      ]
+
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: "update-traffic"
+    waitFor: ["deploy"]
+    args:
+      [
+        "run",
+        "services",
+        "update-traffic",
+        "expressjs",
+        "--to-latest",
+        "--region=asia-southeast2",
+      ]
