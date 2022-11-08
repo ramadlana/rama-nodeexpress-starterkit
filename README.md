@@ -1,4 +1,4 @@
-# Rama Nodejs starterkit
+# Rama Nodejs starterkit v1
 
 #### Preparing database
 
