@@ -23,7 +23,6 @@ steps:
         "deploy",
         "expressjs",
         "--image=gcr.io/rama-lab/github.com/ramadlana/express:$SHORT_SHA",
-        "--port=8100",
         "--region=asia-southeast2",
         "--project=rama-lab",
       ]
