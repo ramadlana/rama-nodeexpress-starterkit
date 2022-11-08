@@ -11,6 +11,22 @@ postgres=# CREATE DATABASE db_test OWNER test;
 postgres=# GRANT  ALL ON DATABASE db_test TO test;
 ```
 
+#### Prisma Pull, pull db from postgresql
+
+```
+npx prisma db pull
+npx prisma generate
+```
+
+####
+
+if we want, create database from zero, without importing using generate.
+prisma will generate database from schema.prisma and push it to postgresql
+
+```
+npx prisma migrate
+```
+
 #### Expose From Outside
 
 ```
