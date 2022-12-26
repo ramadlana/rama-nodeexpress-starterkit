@@ -11,6 +11,13 @@ postgres=# CREATE DATABASE db_test OWNER test;
 postgres=# GRANT  ALL ON DATABASE db_test TO test;
 ```
 
+#### initial username password
+
+```
+user: test
+password: test12345
+```
+
 #### Prisma Pull, pull db from postgresql
 
 ```
@@ -54,6 +61,27 @@ psql -U test db_test < import-this-only-on-public.sql
 
 ```
 nodejs-starterkit/import-me-SQL/import-this-only-on-public.sql
+```
+
+#### Standart Response JSON
+
+```
+{
+  "status": 200,
+  "data": [
+    { "id": 1, "name": "Alice" },
+    { "id": 2, "name": "Bob" },
+    { "id": 3, "name: "Charlie" }
+  ],
+  "message": "Success"
+}
+
+{
+  "status": 400,
+  "data": null,
+  "message": "Missing required field: name"
+}
+
 ```
 
 #### Test API

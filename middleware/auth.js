@@ -3,13 +3,14 @@ const jwt_secret = process.env.JWT_SECRET_KEY;
 
 function auth_midleware(req, res, next) {
   // Get Token using cookies
-  const token =
-    req.cookies[`${process.env.COOKIETOKENNAME}`] || //Token using cookies
-    req.headers[`${process.env.X_TOKEN_NAMING}`]; //Token using x-access_cookie
+  let bearer = req.cookies.authorization;
+  let token = bearer ? bearer.replace("Bearer ", "") : null;
 
   // Validate token
   if (!token) {
     return res.status(401).send({
+      status: 401,
+      data: null,
       message: "Access token required",
     });
   }
@@ -23,11 +24,15 @@ function auth_midleware(req, res, next) {
   } catch (err) {
     if (err.message.includes("invalid"))
       return res.status(401).send({
+        status: 401,
+        data: null,
         message: "You must logged in to access this page",
         detail: err.message,
       });
     if (err.message.includes("jwt malformed"))
       return res.status(401).send({
+        status: 401,
+        data: null,
         message: "You must logged in to access this page",
         detail: err.message,
       });

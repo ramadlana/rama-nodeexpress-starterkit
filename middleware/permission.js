@@ -1,25 +1,16 @@
 const jwt = require("jsonwebtoken");
 
-/**
- * 
- *superadmin
-  admin
-  user
-  customer
-  level1
-  level2
-  level3
-  level4
- */
-
 function permission(roles) {
   return (req, res, next) => {
     // get JWT
-    const jwt_decode = jwt.decode(req.headers[`${process.env.X_TOKEN_NAMING}`]);
+    let bearer = req.headers["authorization"];
+    let token = bearer ? bearer.replace("Bearer ", "") : null;
+    const jwt_decode = jwt.decode(token);
 
+    // If jwt decode roles is included on roles
     if (roles.includes(jwt_decode.roles)) return next();
     return res.status(401).send({
-      message: "Sorry.. You dont have permission to access this page",
+      message: "You dont have permission to access this page",
     });
   };
 }

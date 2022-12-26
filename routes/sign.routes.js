@@ -4,6 +4,7 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
+const cookie = require("cookie");
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
@@ -49,7 +50,11 @@ router.post("/up", async (req, res) => {
   } catch (err) {
     //   if "duplicate" in err.message
     if (err.message.includes("duplicate")) {
-      return res.status(400).send({ message: "user already exists" });
+      return res.status(400).send({
+        status: 400,
+        data: null,
+        message: "user already exists",
+      });
     } else return res.status(400).send({ message: err.message });
   }
 });
@@ -84,12 +89,10 @@ router.post("/in", async (req, res) => {
       return res
         .status(401)
         .send({ message: "Oops your username is not active yet" });
-
     // Check password
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword)
       return res.status(401).send({ message: "wrong username or passwords" });
-
     // if user valid, generate token jwt and
     const token = jwt.sign(
       {
@@ -105,26 +108,26 @@ router.post("/in", async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    // res.setHeader(
-    //   "Set-Cookie",
-    //   cookie.serialize("access_token", token, {
-    //     // DEV Option (localhost and HTTP)
-    //     httpOnly: true,
-    //     secure: false,
-    //     sameSite: "lax",
-    //     maxAge: 3600,
-    //     path: "/",
-    //     // END DEV Option
-    //     //
-    //     // PROD (RemoteHost API Backend And HTTPS)
-    //     // httpOnly: true,
-    //     // secure: false,
-    //     // sameSite: "none",
-    //     // maxAge: 3600,
-    //     // path: "/",
-    //     // END PROD (RemoteHost API Backend And HTTPS)
-    //   })
-    // );
+    // Set cookies
+    const bearer = "Bearer" + " " + token;
+    res.setHeader(
+      "Set-Cookie",
+      cookie.serialize("authorization", bearer, {
+        // DEV Option (localhost and HTTP)
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
+        // domain: ".devlocal.com",
+        maxAge: 3600 * 24, // 24H
+        path: "/",
+        // PROD (RemoteHost API Backend And HTTPS)
+        // httpOnly: true,
+        // secure: false,
+        // sameSite: "none",
+        // maxAge: 3600,
+        // path: "/",
+      })
+    );
 
     // Return token in Body
     return res.send({
@@ -139,7 +142,7 @@ router.post("/in", async (req, res) => {
 // Logout User
 router.get("/out", async (req, res) => {
   try {
-    res.clearCookie("access_token", {
+    res.clearCookie("authorization", {
       path: "/",
     });
     return res.send({ message: "token clear" });
